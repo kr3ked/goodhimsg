@@ -6,7 +6,7 @@ window.GH_CFG = {
 
   // Отправка кодов входа на почту (EmailJS). Пока YOUR_... — код показывается на экране (демо).
   emailjs: {
-  serviceId:  "service_ye9xteq",
+   serviceId:  "service_ye9xteq",
   templateId: "template_tx0ukes",
   publicKey:  "gaFnca6X2PyeWdgLq"
   }
