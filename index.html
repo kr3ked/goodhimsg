@@ -411,6 +411,12 @@ async function checkBan(email){if(!DB)return false;try{const r=await fetch(`${DB
 let banT=0;
 function banPoll(){const u=me();if(!DB||!u||Date.now()-banT<15000)return;banT=Date.now();
   checkBan(u.email).then(b=>{if(b&&me()){sessionStorage.removeItem('gh7s');ui.sheet=null;ui.chat=null;A.step='email';A.err='Ваш аккаунт заблокирован администратором.';draw()}})}
+const EJ=GHC.emailjs&&GHC.emailjs.serviceId&&!/YOUR_/.test(GHC.emailjs.serviceId)?GHC.emailjs:null;
+async function mailCode(to,code){
+  const r=await fetch('https://api.emailjs.com/api/v1.0/email/send',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({service_id:EJ.serviceId,template_id:EJ.templateId,user_id:EJ.publicKey,template_params:{to_email:to,email:to,code}})});
+  if(!r.ok)throw new Error(await r.text());
+}
+let sending=false;
 const REASONS=['Спам','Оскорбления или травля','Мошенничество','Неприемлемый контент','Фейковый аккаунт','Другое'];
 async function sendReport(){
   const r=ui.rp,u=me();if(!r||!r.reason||!u)return;const o=usr(r.uid);if(!o)return;
@@ -552,10 +558,24 @@ function mainView(){
 function reqCode(){
   const em=A.email.trim().toLowerCase();
   if(!EMRE.test(em)){A.err='Введите корректный адрес почты.';return draw()}
+  if(sending)return;
+  D=load();const prev=D.codes[em];
+  if(EJ&&prev&&prev.ts&&Date.now()-prev.ts<30000){A.err='Код уже отправлен. Новый можно запросить через '+Math.ceil((30000-(Date.now()-prev.ts))/1000)+' сек.';return draw()}
   const code=String(Math.floor(100000+Math.random()*900000));
-  D=load();D.codes[em]={code,att:0};save();
-  A.email=em;A.err='';A.step='code';A.fx=true;draw();
-  setTimeout(()=>{toast('Письмо от GoodHi',code.slice(0,3)+' '+code.slice(3),true);const o=$('#o0');if(o)o.focus()},600);
+  D.codes[em]={code,att:0,ts:Date.now()};save();A.email=em;A.err='';
+  if(!EJ){
+    A.step='code';A.fx=true;draw();
+    setTimeout(()=>{toast('Письмо от GoodHi',code.slice(0,3)+' '+code.slice(3),true);const o=$('#o0');if(o)o.focus()},600);
+    return;
+  }
+  sending=true;
+  mailCode(em,code).then(()=>{
+    A.step='code';A.fx=true;draw();
+    setTimeout(()=>{toast('Код отправлен','Проверьте почту '+em+' (и папку «Спам»)');const o=$('#o0');if(o)o.focus()},300);
+  }).catch(()=>{
+    D=load();delete D.codes[em];save();
+    A.err='Не удалось отправить письмо. Проверьте адрес и попробуйте позже.';draw();
+  }).finally(()=>{sending=false});
 }
 function checkCode(v){
   D=load();const em=A.email,c=D.codes[em];
