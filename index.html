@@ -300,7 +300,7 @@ const fresh=()=>({u:[],f:[],c:[],m:[],codes:{},stk:{},s:[],n:1});
 const load=()=>{try{const d=JSON.parse(localStorage.gh7)||fresh();d.stk=d.stk||{};d.s=d.s||[];return d}catch{return fresh()}};
 let D=load();const save=()=>{try{localStorage.gh7=JSON.stringify(D)}catch{toast("Не хватило места","Удалите лишние стикеры или фото")}cloudPush()};
 const mut=fn=>{D=load();fn();save();draw()};
-const meId=()=>+sessionStorage.gh7s||0;
+const meId=()=>+(localStorage.gh7s||sessionStorage.gh7s)||0;
 const me=()=>D.u.find(u=>u.id===meId());
 const usr=id=>D.u.find(u=>u.id===id);
 const full=u=>(u.first+' '+(u.last||'')).trim();
@@ -400,19 +400,53 @@ function cloudPush(){if(!DB)return;clearTimeout(cT);cT=setTimeout(cloudFlush,150
 function cloudFlush(){
   if(!DB)return;let d;try{d=JSON.parse(localStorage.gh7)}catch{return}if(!d||!d.u)return;
   const key=id=>{const u=d.u.find(x=>x.id===id);return u?ek(u.email):null};const want={};
-  d.u.forEach(u=>{want['users/'+ek(u.email)]={email:u.email,un:u.un,first:u.first,last:u.last||'',bio:u.bio||'',plus:!!u.plus,ts:u.ts||0,photo:(u.photo&&String(u.photo).startsWith('data:image/'))?u.photo:''}});
+  d.u.filter(u=>!u.remote).forEach(u=>{want['users/'+ek(u.email)]={email:u.email,un:u.un,first:u.first,last:u.last||'',bio:u.bio||'',plus:!!u.plus,ts:u.ts||0,photo:(u.photo&&String(u.photo).startsWith('data:image/'))?u.photo:''}});
   (d.s||[]).forEach(s=>{const k=key(s.uid);if(!k)return;want['stories/'+k+'_'+s.id]={u:k,k:s.k,text:s.text||'',cap:s.cap||'',bg:s.bg||0,ts:s.ts,feed:!!s.feed,likes:(s.likes||[]).length,cm:(s.cm||[]).length,th:s.th||''}});
   d.c.forEach(c=>{const ms=c.m.map(key).filter(Boolean);if(!ms.length)return;const n=d.m.filter(m=>m.cid===c.id);
     want['chats/'+c.type+'_'+ms.slice().sort().join('__')]={type:c.type,members:ms,n:n.length,last:n.length?n[n.length-1].ts:0}});
+  (d.f||[]).forEach(f=>{const a=key(f.a),b=key(f.b);if(a&&b)want['friends/'+a+'__'+b]={a,b,st:f.st}});
   let prev=[];try{prev=JSON.parse(localStorage.gh7ck||'[]')}catch{}
   prev.filter(k=>!(k in want)&&!k.startsWith('users/')).forEach(k=>{cput(k,null);delete cSent[k]});
   try{localStorage.gh7ck=JSON.stringify(Object.keys(want))}catch{}
   for(const k in want){const s=JSON.stringify(want[k]);if(cSent[k]!==s)cput(k,want[k]).then(ok=>{if(ok)cSent[k]=s})}
 }
+/* ---------- облако: поиск людей и заявки между устройствами ---------- */
+const gi=un=>[...String(un)].reduce((a,c)=>a+c.charCodeAt(0),0)%GR.length;
+async function cget(path){try{const r=await fetch(`${DB}/${path}`);return r.ok?await r.json():null}catch{return null}}
+function mergeUsers(list){D=load();let ch=0;
+  list.forEach(o=>{if(!o||!o.email||!o.un)return;const e=ek(o.email),x=D.u.find(x=>ek(x.email)===e),f={un:o.un,first:o.first||'',last:o.last||'',bio:o.bio||'',plus:!!o.plus,photo:o.photo||null};
+    if(!x){D.u.push({id:D.n++,email:o.email,g:gi(o.un),ts:o.ts||0,remote:1,...f});ch++}
+    else if(x.remote&&JSON.stringify([x.un,x.first,x.last,x.bio,x.plus,x.photo])!==JSON.stringify([f.un,f.first,f.last,f.bio,f.plus,f.photo])){Object.assign(x,f);ch++}});
+  if(ch)save();return ch}
+async function cloudSearch(q){if(!DB)return 0;let list=[];
+  if(EMRE.test(q)){const o=await cget('users/'+encodeURIComponent(ek(q))+'.json');if(o)list=[o]}
+  else{let r=await cget('users.json?orderBy=%22un%22&startAt=%22'+encodeURIComponent(q)+'%22&endAt=%22'+encodeURIComponent(q)+'%5Cuf8ff%22&limitToFirst=10');
+    if(!r)r=await cget('users.json');list=Object.values(r||{}).filter(o=>o&&o.un&&String(o.un).startsWith(q)).slice(0,10)}
+  return mergeUsers(list)}
+let fqT;function fqSearch(){clearTimeout(fqT);const q=ui.fq.trim().toLowerCase().replace(/^@/,'');if(!DB||q.length<2)return;
+  fqT=setTimeout(async()=>{ui.fb=1;if(ui.sheet==='find')draw();await cloudSearch(q);ui.fb=0;if(ui.sheet==='find')draw()},350)}
+let plT=0,plBusy=false;function pullPoll(){if(!DB||Date.now()-plT<4000)return;plT=Date.now();cloudPull()}
+async function cloudPull(){const u=me();if(!DB||!u||plBusy)return;plBusy=true;
+  try{const all=await cget('friends.json');if(all===null)return;
+    const mk=ek(u.email),mine=Object.entries(all).filter(([k,f])=>f&&(f.a===mk||f.b===mk));
+    D=load();const need=[...new Set(mine.map(([k,f])=>f.a===mk?f.b:f.a))].filter(e=>!D.u.some(x=>ek(x.email)===e));
+    const objs=(await Promise.all(need.map(e=>cget('users/'+encodeURIComponent(e)+'.json')))).filter(o=>o&&o.un);
+    let ch=mergeUsers(objs)>0;D=load();if(!D.u.some(x=>x.id===u.id))return;
+    const now=new Set();
+    mine.forEach(([k,f])=>{const oth=f.a===mk?f.b:f.a,ou=D.u.find(x=>ek(x.email)===oth);if(!ou)return;now.add('friends/'+k);
+      const ia=f.a===mk?u.id:ou.id,ib=f.b===mk?u.id:ou.id,ex=D.f.find(x=>x.a===ia&&x.b===ib);
+      if(!ex){D.f.push({id:D.n++,a:ia,b:ib,st:f.st});ch=true}else if(ex.st!==f.st&&f.st==='a'){ex.st='a';ch=true}});
+    const fk='gh7fk_'+mk;let was=[];try{was=JSON.parse(localStorage[fk]||'[]')}catch{}
+    const kf=f=>{const a=D.u.find(x=>x.id===f.a),b=D.u.find(x=>x.id===f.b);return a&&b?'friends/'+ek(a.email)+'__'+ek(b.email):''};
+    const gone=was.filter(k=>!now.has(k));
+    if(gone.length){const n=D.f.length;D.f=D.f.filter(f=>!((f.a===u.id||f.b===u.id)&&gone.includes(kf(f))));if(D.f.length!==n)ch=true}
+    try{localStorage[fk]=JSON.stringify([...now])}catch{}
+    if(ch){save();draw()}
+  }finally{plBusy=false}}
 async function checkBan(email){if(!DB)return false;try{const r=await fetch(`${DB}/bans/${encodeURIComponent(ek(email))}.json`);return r.ok&&(await r.json())===true}catch{return false}}
 let banT=0;
 function banPoll(){const u=me();if(!DB||!u||Date.now()-banT<15000)return;banT=Date.now();
-  checkBan(u.email).then(b=>{if(b&&me()){sessionStorage.removeItem('gh7s');ui.sheet=null;ui.chat=null;A.step='email';A.err='Ваш аккаунт заблокирован администратором.';draw()}})}
+  checkBan(u.email).then(b=>{if(b&&me()){try{localStorage.removeItem('gh7s')}catch{}sessionStorage.removeItem('gh7s');ui.sheet=null;ui.chat=null;A.step='email';A.err='Ваш аккаунт заблокирован администратором.';draw()}})}
 const EJ=GHC.emailjs&&GHC.emailjs.serviceId&&!/YOUR_/.test(GHC.emailjs.serviceId)?GHC.emailjs:null;
 async function mailCode(to,code){
   const r=await fetch('https://api.emailjs.com/api/v1.0/email/send',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({service_id:EJ.serviceId,template_id:EJ.templateId,user_id:EJ.publicKey,template_params:{to_email:to,email:to,code}})});
@@ -536,7 +570,7 @@ function sheetView(){
   }
   if(s==='new'){t='Новый чат';b=`<button class="row" data-a="saved"><span class="av" style="width:44px;height:44px;background:linear-gradient(135deg,${GR[4]})">${ic('bookmark',22)}</span><div><div class="nm">Избранное</div><div class="sb2">Заметки для себя</div></div></button>${friends().map(x=>`<button class="row" data-a="msgto" data-v="${x.u.id}">${av(x.u,44)}<div><div class="nm">${N(x.u)}</div><div class="sb2">@${esc(x.u.un)}</div></div></button>`).join('')}<button class="sb" data-a="sheet" data-v="find" style="margin-top:6px">Найти нового друга</button>`}
   if(s==='find'){t='Найти друга';const q=ui.fq.trim().toLowerCase().replace(/^@/,'');const res=q.length<2?null:D.u.filter(x=>x.id!==meId()&&(x.un.startsWith(q)||x.email===q)).slice(0,10);
-    b=`<input class="inp" id="fq" data-k="fq" placeholder="@юзернейм или точная почта" value="${esc(ui.fq)}" autocomplete="off"><p class="hint" style="margin:8px 0">Добавить можно только настоящих людей, зарегистрированных в GoodHi.</p>${res&&!res.length?'<p class="hint" style="text-align:center;padding:14px">Никого не нашли. Человек должен быть зарегистрирован.</p>':''}${(res||[]).map(x=>{const r=rel(x.id);return `<div class="req" style="background:var(--soft)"><span data-a="uprof" data-v="${x.id}" style="cursor:pointer">${av(x,44)}</span><div class="grow"><div class="nm">${N(x)}</div><div class="sb2">@${esc(x.un)}</div></div><button class="pill ${r==='friend'||r==='sent'?'ok':''}" ${r==='friend'||r==='sent'?'disabled':''} data-a="add" data-v="${x.id}">${{none:'Добавить',friend:'Уже друзья',sent:'Заявка отправлена',incoming:'Принять'}[r]}</button></div>`}).join('')}`}
+    b=`<input class="inp" id="fq" data-k="fq" placeholder="@юзернейм или точная почта" value="${esc(ui.fq)}" autocomplete="off"><p class="hint" style="margin:8px 0">Добавить можно только настоящих людей, зарегистрированных в GoodHi.</p>${DB?'':'<p class="hint" style="margin:0 0 8px;color:#f59e0b">База не подключена — искать можно только тех, кто зарегистрирован на этом устройстве.</p>'}${res&&!res.length?`<p class="hint" style="text-align:center;padding:14px">${ui.fb?'Ищем…':'Никого не нашли. Человек должен быть зарегистрирован.'}</p>`:''}${(res||[]).map(x=>{const r=rel(x.id);return `<div class="req" style="background:var(--soft)"><span data-a="uprof" data-v="${x.id}" style="cursor:pointer">${av(x,44)}</span><div class="grow"><div class="nm">${N(x)}</div><div class="sb2">@${esc(x.un)}</div></div><button class="pill ${r==='friend'||r==='sent'?'ok':''}" ${r==='friend'||r==='sent'?'disabled':''} data-a="add" data-v="${x.id}">${{none:'Добавить',friend:'Уже друзья',sent:'Заявка отправлена',incoming:'Принять'}[r]}</button></div>`}).join('')}`}
   if(s==='shop'){t='Магазин';
     const perks=[['smile','Собственные стикеры','Создавайте стикеры из своих картинок'],['palette','Цвет ника','Ваше имя заметно в каждом чате'],['image','Баннер в профиль','Картинка или переливающийся градиент'],['sparkles','Новые плюшки','Скоро, дальше дополним']];
     b=`<div class="plus-hero"><div class="crown">${ic('crown',34)}</div><h3>Good Plus</h3><p>Больше свободы в GoodHi</p><div class="price">${u.plus?'Подписка активна':PLUS_PRICE}</div></div><div style="margin:12px 0 6px">${perks.map(([i,h,d],k)=>`<div class="perk ${k===3?'soon':''}"><span class="pi">${ic(i,22)}</span><div><b>${h}</b><small>${d}</small></div></div>`).join('')}</div>${u.plus?`<div class="act">${ic('check',18)} Good Plus активен</div><button class="sb" data-a="plusoff">Отключить подписку</button>`:`<button class="pb pl" data-a="plusbuy">${ic('sparkles',18)}Купить Good Plus</button><p class="hint ctr" style="margin-top:8px">Демо-режим: оплата не списывается.</p>`}`}
@@ -585,21 +619,27 @@ function checkCode(v){
   if(c.code!==v){c.att++;save();A.err='Неверный код. Проверьте письмо и попробуйте ещё раз.';draw();return}
   A.code=v;A.err='';$('#toast').innerHTML='';
   const u=D.u.find(u=>u.email===em);
-  checkBan(em).then(b=>{
+  checkBan(em).then(async b=>{
     if(b){A.step='email';A.err='Этот аккаунт заблокирован администратором.';A.fx=true;draw();return}
-    D=load();
-    if(u){delete D.codes[em];save();login(u.id)}else{A.step='profile';A.fx=true;draw()}
+    D=load();let u2=D.u.find(x=>x.email===em);
+    if(!u2&&DB){const o=await cget('users/'+encodeURIComponent(ek(em))+'.json');
+      if(o&&o.un){D=load();D.u.push({id:D.n++,email:em,un:o.un,first:o.first||'',last:o.last||'',bio:o.bio||'',plus:!!o.plus,g:gi(o.un),photo:o.photo||null,ts:o.ts||0});save();u2=D.u[D.u.length-1]}}
+    if(u2){delete D.codes[em];save();login(u2.id)}else{A.step='profile';A.fx=true;draw()}
   });
 }
-function register(){
+async function register(){if(register.b)return;register.b=true;try{await register0()}finally{register.b=false}}
+async function register0(){
   const p=A.p,un=p.un.trim().toLowerCase().replace(/^@/,'');D=load();
   if(!p.first.trim()){A.err='Укажите имя.';return draw()}
   if(!UNRE.test(un)){A.err='Юзернейм: 3–20 символов, латиница, цифры и _.';return draw()}
   if(D.u.some(u=>u.un===un)){A.err='Этот юзернейм уже занят — выберите другой.';return draw()}
+  if(DB){const r=(await cget('users.json?orderBy=%22un%22&equalTo=%22'+encodeURIComponent(un)+'%22'))||(await cget('users.json'));
+    if(Object.values(r||{}).some(o=>o&&o.un===un&&ek(o.email)!==ek(A.email))){A.err='Этот юзернейм уже занят — выберите другой.';return draw()}}
+  D=load();
   const u={id:D.n++,email:A.email,un,first:p.first.trim(),last:p.last.trim(),bio:'',g:p.g,photo:p.photo,ts:Date.now()};
   D.u.push(u);delete D.codes[A.email];save();login(u.id);
 }
-function login(id){sessionStorage.gh7s=id;A={fx:true,step:'email',email:'',code:'',err:'',left:0,p:{first:'',last:'',un:'',g:0,photo:null}};ui={tab:'chats',chat:null,sheet:null,q:'',fq:'',pd:null,perr:'',tray:false,att:false,uid:null,fid:null,sid:null,sd:null,fx:{}};inited=false;draw();tick()}
+function login(id){try{localStorage.gh7s=id}catch{}sessionStorage.gh7s=id;{const d=load(),x=d.u.find(u=>u.id===id);if(x&&x.remote){delete x.remote;D=d;save()}}A={fx:true,step:'email',email:'',code:'',err:'',left:0,p:{first:'',last:'',un:'',g:0,photo:null}};ui={tab:'chats',chat:null,sheet:null,q:'',fq:'',pd:null,perr:'',tray:false,att:false,uid:null,fid:null,sid:null,sd:null,fx:{}};inited=false;draw();tick()}
 function openDm(uid){
   mut(()=>{let c=D.c.find(c=>c.type==='dm'&&c.m.includes(meId())&&c.m.includes(uid));
     if(!c){if(rel(uid)!=='friend')return;c={id:D.n++,type:'dm',m:[meId(),uid]};D.c.push(c)}
@@ -683,13 +723,13 @@ document.addEventListener('click',e=>{
   else if(a==='pcol'){ui.pd.g=+v;ui.pd.photo=null;draw()}
   else if(a==='rmphoto'){ui.pd.photo=null;draw()}
   else if(a==='psave')saveProfile();
-  else if(a==='dologout'){if(CALL)endCall('done',true);sessionStorage.removeItem('gh7s');ui.sheet=null;ui.chat=null;draw()}
+  else if(a==='dologout'){if(CALL)endCall('done',true);try{localStorage.removeItem('gh7s')}catch{}sessionStorage.removeItem('gh7s');ui.sheet=null;ui.chat=null;draw()}
 });
 document.addEventListener('input',e=>{
   const t=e.target;
   if(t.dataset.k==='email')A.email=t.value;
   else if(t.dataset.k==='q'){ui.q=t.value;draw()}
-  else if(t.dataset.k==='fq'){ui.fq=t.value;draw()}
+  else if(t.dataset.k==='fq'){ui.fq=t.value;draw();fqSearch()}
   else if(t.dataset.p){A.p[t.dataset.p]=t.dataset.p==='un'?t.value.toLowerCase().replace(/[^a-z0-9_]/g,''):t.value;if(t.dataset.p==='un')t.value=A.p.un}
   else if(t.dataset.r){ui.rp[t.dataset.r]=t.value}
   else if(t.dataset.s){ui.sd[t.dataset.s]=t.value}
@@ -952,7 +992,7 @@ function tick(){
   });
   if(ch)save();
   // уведомления
-  const u=me();if(!u)return;banPoll();
+  const u=me();if(!u)return;banPoll();pullPoll();
   mine.forEach(c=>{const ms=cmsgs(c.id),l=ms[ms.length-1];if(!l)return;const prev=seen[c.id]??0;
     if(inited&&l.id>prev&&l.from!==meId()&&ui.chat!==c.id){const o=usr(l.from);if(cfg.on){toast(o?full(o):'Новое сообщение',cfg.preview?l.t:'Новое сообщение',false,c.id);if(cfg.sound)beep()}}
     seen[c.id]=Math.max(prev,l.id)});
@@ -971,7 +1011,7 @@ function tick(){
 }
 window.addEventListener('storage',e=>{if(e.key==='gh7')tick();else if(e.key==='gh7sig'&&e.newValue){try{onSig(JSON.parse(e.newValue))}catch{}}});
 setInterval(()=>{if(document.visibilityState==='visible')tick()},1200);
-draw();tick();cloudPush();
+draw();tick();cloudPull().finally(cloudPush);
 </script>
 </body>
 </html>
