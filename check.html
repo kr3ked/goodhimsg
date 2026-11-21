@@ -1,0 +1,50 @@
+<!DOCTYPE html>
+<html lang="ru"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>GoodHi — проверка подключения</title>
+<style>
+body{font:16px/1.5 system-ui,sans-serif;background:#0c0e12;color:#e9ecf2;max-width:640px;margin:30px auto;padding:0 16px}
+h1{font-size:24px}.r{padding:10px 14px;border-radius:12px;background:#13161c;margin:8px 0;border-left:4px solid #10b981}
+.r.bad{border-left-color:#f43f5e}.r small{display:block;color:#9aa3b2;margin-top:3px}
+button{font:inherit;font-weight:800;background:#3b82f6;color:#fff;border:0;border-radius:12px;padding:12px 18px;margin:8px 8px 8px 0;cursor:pointer}
+button:disabled{opacity:.5}
+</style>
+<script src="config.js"></script></head>
+<body><h1>Проверка подключения</h1><div id="out"></div>
+<button id="again">Проверить заново</button><button id="sync">Отправить данные мессенджера в базу</button>
+<script>
+const $=s=>document.querySelector(s),out=$('#out'),C=window.GH_CFG;
+const esc=s=>String(s).replace(/[&<>]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;'}[c]));
+const add=(ok,t,h)=>out.insertAdjacentHTML('beforeend',`<div class="r ${ok?'':'bad'}">${ok?'✅':'❌'} ${esc(t)}${h?`<small>${esc(h)}</small>`:''}</div>`);
+const DB=C&&!/YOUR-/.test(C.dbUrl||'')?String(C.dbUrl).replace(/\/$/,''):'';
+const ek=e=>String(e||'').trim().toLowerCase().replace(/[.$#\[\]\/]/g,',');
+const put=(p,v)=>fetch(`${DB}/${p.split('/').map(encodeURIComponent).join('/')}.json`,{method:'PUT',body:JSON.stringify(v)});
+function local(){try{const d=JSON.parse(localStorage.gh7);return d&&d.u?d:null}catch{return null}}
+async function run(){
+  out.innerHTML='';
+  if(!C){add(false,'config.js не загрузился','Файл должен лежать рядом с check.html. Откройте F12 → Console: там будет ошибка синтаксиса (часто пропущена запятая).');return}
+  add(true,'config.js загружен');
+  if(!DB){add(false,'dbUrl не заполнен или остался YOUR-...','Впишите адрес Realtime Database в config.js.');return}
+  add(true,'Адрес базы: '+DB);
+  try{
+    const r=await put('users/_check',{un:'_check'});
+    if(r.ok){add(true,'Запись в базу работает');await fetch(`${DB}/users/_check.json`,{method:'DELETE'})}
+    else add(false,'Запись в базу запрещена (код '+r.status+')',r.status===401?'Правила в Firebase не опубликованы или отличаются от database.rules.json. Проверьте Realtime Database → Rules → Publish.':r.status===404?'Неверный dbUrl.':'Ответ: '+await r.text());
+  }catch{add(false,'Нет связи с базой','Неверный адрес dbUrl, блокировщик рекламы или нет интернета.')}
+  const d=local();
+  if(!d||!d.u.length)add(false,'В этом браузере нет данных мессенджера','Зарегистрируйтесь в мессенджере из этого же браузера (адрес kr3ked.github.io), затем нажмите «Проверить заново».');
+  else add(true,`В этом браузере: пользователей ${d.u.length}, историй ${(d.s||[]).length}, чатов ${d.c.length}`);
+}
+async function sync(){
+  const d=local();if(!DB||!d)return alert('Нет данных или не настроен dbUrl.');
+  const key=id=>{const u=d.u.find(x=>x.id===id);return u?ek(u.email):null},want={};
+  d.u.forEach(u=>{want['users/'+ek(u.email)]={email:u.email,un:u.un,first:u.first,last:u.last||'',bio:u.bio||'',plus:!!u.plus,ts:u.ts||0,photo:(u.photo&&String(u.photo).startsWith('data:image/'))?u.photo:''}});
+  (d.s||[]).forEach(s=>{const k=key(s.uid);if(k)want['stories/'+k+'_'+s.id]={u:k,k:s.k,text:s.text||'',cap:s.cap||'',bg:s.bg||0,ts:s.ts,feed:!!s.feed,likes:(s.likes||[]).length,cm:(s.cm||[]).length,th:s.th||''}});
+  d.c.forEach(c=>{const ms=c.m.map(key).filter(Boolean);if(!ms.length)return;const n=d.m.filter(m=>m.cid===c.id);want['chats/'+c.type+'_'+ms.slice().sort().join('__')]={type:c.type,members:ms,n:n.length,last:n.length?n[n.length-1].ts:0}});
+  let ok=0,bad=0,code='';
+  for(const k in want){try{const r=await put(k,want[k]);if(r.ok)ok++;else{bad++;code=r.status}}catch{bad++;code='сеть'}}
+  add(!bad,`Отправлено записей: ${ok}`+(bad?`, не удалось: ${bad} (код ${code})`:''),bad?'':'Откройте админку и нажмите «Обновить».');
+}
+$('#again').onclick=run;
+$('#sync').onclick=async e=>{e.target.disabled=true;await sync();e.target.disabled=false};
+run();
+</script></body></html>
