@@ -392,7 +392,9 @@ let tt;function toast(title,text,big,cid){clearTimeout(tt);$('#toast').innerHTML
 /* ---------- облако: Firebase Realtime Database (REST) ---------- */
 const GHC=window.GH_CFG||{};const DB=/YOUR-/.test(GHC.dbUrl||'')?'':String(GHC.dbUrl||'').replace(/\/$/,'');
 const ek=e=>String(e||'').trim().toLowerCase().replace(/[.$#\[\]\/]/g,',');
-const cput=(path,v)=>fetch(`${DB}/${path.split('/').map(encodeURIComponent).join('/')}.json`,{method:v===null?'DELETE':'PUT',body:v===null?undefined:JSON.stringify(v)}).then(r=>r.ok).catch(()=>false);
+let cErrShown=false;
+function cErr(code){console.warn('GoodHi база: ошибка записи, код',code);if(!cErrShown){cErrShown=true;toast('База недоступна','Код '+code+'. Откройте check.html для диагностики')}}
+const cput=(path,v)=>fetch(`${DB}/${path.split('/').map(encodeURIComponent).join('/')}.json`,{method:v===null?'DELETE':'PUT',body:v===null?undefined:JSON.stringify(v)}).then(r=>{if(!r.ok)cErr(r.status);return r.ok}).catch(()=>{cErr(0);return false});
 const cSent={};let cT=null;
 function cloudPush(){if(!DB)return;clearTimeout(cT);cT=setTimeout(cloudFlush,1500)}
 function cloudFlush(){
