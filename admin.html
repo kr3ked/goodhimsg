@@ -46,7 +46,7 @@ header h1{font-size:22px;font-weight:800;flex:1}
 .empty{text-align:center;color:var(--mut);padding:50px 10px}.empty b{display:block;color:var(--tx);font-size:18px;margin-bottom:4px}
 .login{max-width:360px;margin:12vh auto 0}.login h1{font-size:26px;margin-bottom:6px}.login p{color:var(--mut);margin-bottom:18px}
 .err{color:var(--red);font-size:14px;margin:6px 0 10px}
-#toast{position:fixed;left:50%;bottom:24px;transform:translateX(-50%);background:var(--tx);color:var(--bg);padding:10px 18px;border-radius:14px;font-weight:700;opacity:0;pointer-events:none;transition:opacity .25s;z-index:9}
+#toast{position:fixed;left:50%;bottom:24px;transform:translateX(-50%);max-width:92vw;text-align:center;background:var(--tx);color:var(--bg);padding:10px 18px;border-radius:14px;font-weight:700;opacity:0;pointer-events:none;transition:opacity .25s;z-index:9}
 #toast.on{opacity:1}
 code{background:var(--soft);padding:1px 6px;border-radius:6px}
 </style>
@@ -86,14 +86,20 @@ async function api(path,method='GET',body){
   if(!r.ok)throw new Error('Ошибка базы: '+r.status);
   return r.json();
 }
+function adminEmail(){try{return JSON.parse(atob(tok.split('.')[1].replace(/-/g,'+').replace(/_/g,'/'))).email||''}catch{return ''}}
 async function loadAll(){
   const names=['users','stories','chats','reports','bans'];
-  const res=await Promise.all(names.map(n=>api(n)));
-  names.forEach((n,i)=>data[n]=res[i]||{});
+  const res=await Promise.allSettled(names.map(n=>api(n)));
+  const failed=[];
+  res.forEach((r,i)=>{
+    if(r.status==='fulfilled')data[names[i]]=r.value||{};
+    else{if(r.reason&&r.reason.message==='session')throw r.reason;failed.push(names[i]+' ('+(r.reason&&r.reason.message||'ошибка')+')')}
+  });
+  if(failed.length)throw new Error('Нет доступа к разделам: '+failed.join(', ')+'. Вы вошли как '+(adminEmail()||'?')+'. Эта же почта (маленькими буквами) должна стоять в правилах Firebase во всех 7 местах, и правила должны быть опубликованы.');
 }
 
 /* ---------- UI ---------- */
-let tt;function toast(m){const e=$('#toast');e.textContent=m;e.classList.add('on');clearTimeout(tt);tt=setTimeout(()=>e.classList.remove('on'),2800)}
+let tt;function toast(m,ms=2800){const e=$('#toast');e.textContent=m;e.classList.add('on');clearTimeout(tt);tt=setTimeout(()=>e.classList.remove('on'),ms)}
 const av=(u,s=42,fallback='')=>`<div class="av" style="width:${s}px;height:${s}px;font-size:${s*.38}px">${u&&okImg(u.photo)?`<img src="${esc(u.photo)}" alt="">`:esc(ini(u?nm(u):fallback))}</div>`;
 const empty=(a,b)=>`<div class="empty"><b>${a}</b>${b}</div>`;
 
@@ -106,12 +112,13 @@ function root(){
     <input class="inp" id="pw" type="password" placeholder="Пароль" autocomplete="current-password">
     ${loginErr?`<div class="err">${esc(loginErr)}</div>`:''}
     <button class="btn pri" style="width:100%" data-a="login">Войти</button></div>`;return}
-  el.innerHTML=`<header><h1>GoodHi · админ-панель</h1><button class="btn" data-a="refresh">Обновить</button><button class="btn" data-a="logout">Выйти</button></header>
+  el.innerHTML=`<header><h1>GoodHi · админ-панель <small class="mut" id="who" style="font-size:13px;font-weight:600"></small></h1><button class="btn" data-a="refresh">Обновить</button><button class="btn" data-a="logout">Выйти</button></header>
   <div class="stats" id="stats"></div><div class="tabs" id="tabs"></div><div id="sw"></div><div id="view"></div>`;
   paint();
 }
 function paint(){
   if(!$('#view'))return;
+  if($('#who')&&tok)$('#who').textContent=adminEmail();
   const nrep=Object.keys(data.reports).length;
   $('#stats').innerHTML=[['Пользователей',Object.keys(data.users).length],['Историй',Object.keys(data.stories).length],['Чатов',Object.keys(data.chats).length],['Жалоб',nrep],['В бане',Object.keys(data.bans).length]].map(([l,n])=>`<div class="stat"><b>${n}</b><span>${l}</span></div>`).join('');
   $('#tabs').innerHTML=[['reports','Жалобы'],['users','Пользователи'],['stories','Истории'],['chats','Чаты и группы']].map(([k,l])=>`<button class="${tab===k?'on':''}" data-a="tab" data-v="${k}">${l}${k==='reports'&&nrep?`<i>${nrep}</i>`:''}</button>`).join('');
@@ -159,14 +166,17 @@ function vChats(){
 /* ---------- действия ---------- */
 async function run(fn,ok){
   try{await fn();await loadAll();paint();if(ok)toast(ok)}
-  catch(e){if(e.message==='session'){root();return}toast(e.message)}
+  catch(e){if(e.message==='session'){root();return}toast(e.message,12000)}
 }
 document.addEventListener('click',async e=>{
   const el=e.target.closest('[data-a]');if(!el)return;const a=el.dataset.a;
   if(a==='login'){
     const em=$('#em').value.trim(),pw=$('#pw').value;if(!em||!pw)return;
-    try{await signIn(em,pw);localStorage.ghAdm=em;loginErr='';root();await loadAll();paint();startTimer()}
-    catch(err){loginErr='Не удалось войти: '+(String(err.message).includes('INVALID')||String(err.message).includes('EMAIL')?'неверная почта или пароль.':err.message);root()}
+    try{await signIn(em,pw)}
+    catch(err){loginErr='Не удалось войти: '+(String(err.message).includes('INVALID')||String(err.message).includes('EMAIL')?'неверная почта или пароль.':err.message);root();return}
+    localStorage.ghAdm=em;loginErr='';root();startTimer();
+    try{await loadAll()}catch(err){toast(err.message,12000)}
+    paint();
   }
   else if(a==='logout'){delete sessionStorage.ghr;tok=null;clearInterval(timer);root()}
   else if(a==='refresh')run(()=>0,'Обновлено');
@@ -184,10 +194,10 @@ document.addEventListener('click',async e=>{
 });
 document.addEventListener('input',e=>{if(e.target.id==='q'){q=e.target.value;$('#view').innerHTML=vUsers()}});
 document.addEventListener('keydown',e=>{if(e.key==='Enter'&&(e.target.id==='pw'||e.target.id==='em'))document.querySelector('[data-a=login]').click()});
-function startTimer(){clearInterval(timer);timer=setInterval(()=>{if(document.visibilityState==='visible'&&sessionStorage.ghr&&!document.activeElement.matches('input'))loadAll().then(paint).catch(()=>{})},20000)}
+function startTimer(){clearInterval(timer);timer=setInterval(()=>{if(document.visibilityState==='visible'&&sessionStorage.ghr&&!document.activeElement.matches('input'))loadAll().then(paint,paint)},20000)}
 
 root();
-if(DB&&KEY&&sessionStorage.ghr)loadAll().then(()=>{paint();startTimer()}).catch(e=>{if(e.message==='session')root();else toast(e.message)});
+if(DB&&KEY&&sessionStorage.ghr)loadAll().then(()=>{paint();startTimer()}).catch(e=>{if(e.message==='session')root();else{toast(e.message,12000);paint();startTimer()}});
 </script>
 </body>
 </html>
