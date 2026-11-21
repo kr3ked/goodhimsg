@@ -1,4 +1,3 @@
-
 <!DOCTYPE html>
 <html lang="ru">
 <head>
@@ -35,7 +34,7 @@ input{font:inherit;color:inherit;font-size:max(16px,1rem)}
 @keyframes fl{0%,100%{transform:translate(0,0) scale(1)}33%{transform:translate(40px,-50px) scale(1.15)}66%{transform:translate(-45px,35px) scale(.92)}}
 .glass{position:relative;width:100%;max-width:380px;padding:30px 24px;border-radius:32px;background:rgba(255,255,255,.65);border:1px solid rgba(255,255,255,.55);backdrop-filter:blur(18px);box-shadow:0 24px 60px rgba(99,102,241,.18);color:#0f172a}
 [data-theme=dark] .glass{background:rgba(7,3,15,.72);border-color:rgba(59,130,246,.22);color:#f1eaff;box-shadow:0 24px 60px rgba(30,58,138,.35)}
- 
+
 .glass h1{font-size:30px;font-weight:800;text-align:center}
 .glass .sub{text-align:center;color:var(--mut);margin:8px 0 22px;font-size:15px}
 .otp{display:flex;gap:7px;justify-content:center;margin:8px 0}
@@ -290,6 +289,7 @@ body.noauth .fly{display:block}
 <div id="toast"></div>
 <div id="call"></div>
 <div id="sview"></div>
+<script src="config.js"></script>
 <script>
 const $=s=>document.querySelector(s);
 (function(){const f=document.getElementById('fly');if(!f)return;let h='';for(let i=0;i<12;i++){const r=Math.random;h+=`<i style="left:${(r()*100).toFixed(1)}%;top:${(r()*100).toFixed(1)}%;width:${(2+r()*2.5).toFixed(1)}px;height:${(2+r()*2.5).toFixed(1)}px;--dx:${Math.round((r()-.5)*180)}px;--dy:${Math.round((r()-.5)*180)}px;animation-duration:${Math.round(32+r()*34)}s;animation-delay:-${Math.round(r()*40)}s"></i>`}f.innerHTML=h})();
@@ -298,7 +298,7 @@ const GR=['#3b82f6,#1e40af','#34d399,#0d9488','#f472b6,#f43f5e','#fbbf24,#f97316
 const EMRE=/^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/,UNRE=/^[a-z0-9_]{3,20}$/;
 const fresh=()=>({u:[],f:[],c:[],m:[],codes:{},stk:{},s:[],n:1});
 const load=()=>{try{const d=JSON.parse(localStorage.gh7)||fresh();d.stk=d.stk||{};d.s=d.s||[];return d}catch{return fresh()}};
-let D=load();const save=()=>{try{localStorage.gh7=JSON.stringify(D)}catch{toast("Не хватило места","Удалите лишние стикеры или фото")}};
+let D=load();const save=()=>{try{localStorage.gh7=JSON.stringify(D)}catch{toast("Не хватило места","Удалите лишние стикеры или фото")}cloudPush()};
 const mut=fn=>{D=load();fn();save();draw()};
 const meId=()=>+sessionStorage.gh7s||0;
 const me=()=>D.u.find(u=>u.id===meId());
@@ -388,12 +388,44 @@ mq.addEventListener('change',applyCfg);applyCfg();
 const LOGO=s=>`<svg width="${s}" height="${s}" viewBox="0 0 48 48" style="display:block;margin:0 auto 10px"><defs><linearGradient id="lg" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#3b82f6"/><stop offset="1" stop-color="#1e3a8a"/></linearGradient></defs><path d="M24 4C13 4 5 11.5 5 21c0 5.2 2.4 9.7 6.2 12.6L9 43l9.4-4.4c1.8.5 3.6.8 5.6.8 11 0 19-7.5 19-17.4S35 4 24 4z" fill="url(#lg)"/><circle cx="17" cy="19" r="2.6" fill="#fff"/><circle cx="31" cy="19" r="2.6" fill="#fff"/><path d="M16.5 26.5c2 3.2 4.4 4.5 7.5 4.5s5.5-1.3 7.5-4.5" stroke="#fff" stroke-width="3" stroke-linecap="round" fill="none"/></svg>`;
 let AC;function beep(){try{AC=AC||new AudioContext();if(AC.state==='suspended')AC.resume();const o=AC.createOscillator(),g=AC.createGain();o.connect(g);g.connect(AC.destination);o.frequency.value=880;g.gain.setValueAtTime(.06,AC.currentTime);g.gain.exponentialRampToValueAtTime(.001,AC.currentTime+.25);o.start();o.stop(AC.currentTime+.25)}catch{}}
 let tt;function toast(title,text,big,cid){clearTimeout(tt);$('#toast').innerHTML=`<div class="toast" data-a="tclose" data-cid="${cid||''}"><b>${esc(title)}</b>${big?`<div class="big">${esc(text)}</div><small>Демо: настоящее письмо не отправляется</small>`:`<small>${esc(text)}</small>`}</div>`;tt=setTimeout(()=>$('#toast').innerHTML='',big?25000:4000)}
- 
+
+/* ---------- облако: Firebase Realtime Database (REST) ---------- */
+const GHC=window.GH_CFG||{};const DB=/YOUR-/.test(GHC.dbUrl||'')?'':String(GHC.dbUrl||'').replace(/\/$/,'');
+const ek=e=>String(e||'').trim().toLowerCase().replace(/[.$#\[\]\/]/g,',');
+const cput=(path,v)=>fetch(`${DB}/${path.split('/').map(encodeURIComponent).join('/')}.json`,{method:v===null?'DELETE':'PUT',body:v===null?undefined:JSON.stringify(v)}).then(r=>r.ok).catch(()=>false);
+const cSent={};let cT=null;
+function cloudPush(){if(!DB)return;clearTimeout(cT);cT=setTimeout(cloudFlush,1500)}
+function cloudFlush(){
+  if(!DB)return;let d;try{d=JSON.parse(localStorage.gh7)}catch{return}if(!d||!d.u)return;
+  const key=id=>{const u=d.u.find(x=>x.id===id);return u?ek(u.email):null};const want={};
+  d.u.forEach(u=>{want['users/'+ek(u.email)]={email:u.email,un:u.un,first:u.first,last:u.last||'',bio:u.bio||'',plus:!!u.plus,ts:u.ts||0,photo:(u.photo&&String(u.photo).startsWith('data:image/'))?u.photo:''}});
+  (d.s||[]).forEach(s=>{const k=key(s.uid);if(!k)return;want['stories/'+k+'_'+s.id]={u:k,k:s.k,text:s.text||'',cap:s.cap||'',bg:s.bg||0,ts:s.ts,feed:!!s.feed,likes:(s.likes||[]).length,cm:(s.cm||[]).length,th:s.th||''}});
+  d.c.forEach(c=>{const ms=c.m.map(key).filter(Boolean);if(!ms.length)return;const n=d.m.filter(m=>m.cid===c.id);
+    want['chats/'+c.type+'_'+ms.slice().sort().join('__')]={type:c.type,members:ms,n:n.length,last:n.length?n[n.length-1].ts:0}});
+  let prev=[];try{prev=JSON.parse(localStorage.gh7ck||'[]')}catch{}
+  prev.filter(k=>!(k in want)&&!k.startsWith('users/')).forEach(k=>{cput(k,null);delete cSent[k]});
+  try{localStorage.gh7ck=JSON.stringify(Object.keys(want))}catch{}
+  for(const k in want){const s=JSON.stringify(want[k]);if(cSent[k]!==s)cput(k,want[k]).then(ok=>{if(ok)cSent[k]=s})}
+}
+async function checkBan(email){if(!DB)return false;try{const r=await fetch(`${DB}/bans/${encodeURIComponent(ek(email))}.json`);return r.ok&&(await r.json())===true}catch{return false}}
+let banT=0;
+function banPoll(){const u=me();if(!DB||!u||Date.now()-banT<15000)return;banT=Date.now();
+  checkBan(u.email).then(b=>{if(b&&me()){sessionStorage.removeItem('gh7s');ui.sheet=null;ui.chat=null;A.step='email';A.err='Ваш аккаунт заблокирован администратором.';draw()}})}
+const REASONS=['Спам','Оскорбления или травля','Мошенничество','Неприемлемый контент','Фейковый аккаунт','Другое'];
+async function sendReport(){
+  const r=ui.rp,u=me();if(!r||!r.reason||!u)return;const o=usr(r.uid);if(!o)return;
+  if(!DB)return toast('База не подключена','Администратор ещё не заполнил config.js');
+  const rep={from:ek(u.email),fromUn:u.un,target:ek(o.email),targetUn:o.un,targetName:full(o),reason:r.reason,text:(r.text||'').trim().slice(0,300),ts:Date.now()};
+  try{cloudFlush();const res=await fetch(`${DB}/reports.json`,{method:'POST',body:JSON.stringify(rep)});if(!res.ok)throw 0;ui.rp=null;closeSheet();toast('Жалоба отправлена','Администратор рассмотрит её')}
+  catch{toast('Не удалось отправить','Проверьте интернет и попробуйте ещё раз')}
+}
+const thumbOf=f=>new Promise(r=>{const u=URL.createObjectURL(f),im=new Image();im.onload=()=>{const k=Math.min(1,240/Math.max(im.width,im.height)),c=document.createElement('canvas');c.width=Math.max(1,Math.round(im.width*k));c.height=Math.max(1,Math.round(im.height*k));c.getContext('2d').drawImage(im,0,0,c.width,c.height);URL.revokeObjectURL(u);r(c.toDataURL('image/jpeg',.6))};im.onerror=()=>{URL.revokeObjectURL(u);r(null)};im.src=u});
+
 /* ---------- state ---------- */
 let A={fx:true,step:'email',email:'',code:'',err:'',left:0,p:{first:'',last:'',un:'',g:0,photo:null}};
 let ui={tab:'chats',chat:null,sheet:null,q:'',fq:'',pd:null,perr:'',tray:false,att:false,uid:null,fid:null,sid:null,sd:null,fx:{}};
 let seen={},seenReq=new Set(),seenS={},inited=false,lastRaw='',lastCount=0;
- 
+
 /* ---------- helpers on data ---------- */
 const myChats=()=>D.c.filter(c=>c.m.includes(meId()));
 const other=c=>c.type==='dm'?usr(c.m.find(x=>x!==meId())):null;
@@ -401,7 +433,7 @@ const cmsgs=id=>D.m.filter(m=>m.cid===id);
 const rel=uid=>{const f=D.f.find(f=>(f.a===meId()&&f.b===uid)||(f.a===uid&&f.b===meId()));return !f?'none':f.st==='a'?'friend':f.a===meId()?'sent':'incoming'};
 const friends=()=>D.f.filter(f=>f.st==='a'&&(f.a===meId()||f.b===meId())).map(f=>({fid:f.id,u:usr(f.a===meId()?f.b:f.a)})).filter(x=>x.u);
 const incoming=()=>D.f.filter(f=>f.st==='p'&&f.b===meId()).map(f=>({fid:f.id,u:usr(f.a)})).filter(x=>x.u);
- 
+
 /* ---------- render ---------- */
 let shown=new Set(),shownChat=null,lastChatDrawn=null,drawnTab=null,navPrev=null,FX={};
 function draw(){
@@ -490,7 +522,7 @@ function sheetView(){
   if(s==='img')return `<div class="ov${fx}" data-a="close" data-bg="1" style="align-items:center;background:rgba(0,0,0,.88)"><div class="viewer"><img class="vimg" data-fid="${ui.fid}" alt=""><button class="pb" style="max-width:240px;margin-top:14px;display:flex;align-items:center;justify-content:center;gap:8px" data-a="dl" data-v="${ui.fid}">${ic('download',18)}Скачать</button></div><button class="ib xbtn" data-a="close" aria-label="Закрыть">${ic('x',20)}</button></div>`;
   if(s==='user'){
     const o=usr(ui.uid);if(!o)return '';const r=rel(o.id);
-    const acts={friend:`<button class="pb" data-a="msgto" data-v="${o.id}">${ic('messageCircle',18)}Написать</button><button class="gb" data-a="unfriend" data-v="${o.id}">Удалить из друзей</button>`,none:`<button class="sb" data-a="add" data-v="${o.id}">${ic('userPlus',18)}Добавить в друзья</button>`,sent:`<button class="sb" disabled>Заявка отправлена</button>`,incoming:`<button class="pb" data-a="add" data-v="${o.id}">Принять заявку</button>`}[r];
+    const acts={friend:`<button class="pb" data-a="msgto" data-v="${o.id}">${ic('messageCircle',18)}Написать</button><button class="gb" data-a="unfriend" data-v="${o.id}">Удалить из друзей</button>`,none:`<button class="sb" data-a="add" data-v="${o.id}">${ic('userPlus',18)}Добавить в друзья</button>`,sent:`<button class="sb" disabled>Заявка отправлена</button>`,incoming:`<button class="pb" data-a="add" data-v="${o.id}">Принять заявку</button>`}[r]+`<button class="gb" data-a="report" data-v="${o.id}" style="color:#f43f5e">Пожаловаться</button>`;
     const isImg=o.plus&&o.banner&&o.banner.startsWith('data:');
     return `<div class="ov${fx}" data-a="close" data-bg="1"><div class="sheet${fx}"><button class="ib xbtn" data-a="close" aria-label="Закрыть">${ic('x',20)}</button><div class="ubn ${isImg?'':'bn'}" style="${bannerCss(o)}"></div><div class="uhead"><div class="uav">${av(o,92)}</div><div class="uname">${N(o)}</div><div class="sb2 ctr" style="color:var(--mut)">@${esc(o.un)}</div>${o.bio?`<p class="ubio">${esc(o.bio)}</p>`:'<p class="ubio mutd">О себе пока ничего не написано.</p>'}</div><div class="stack">${acts}</div></div></div>`;
   }
@@ -503,6 +535,8 @@ function sheetView(){
   if(s==='profile'){t='Профиль';const d=ui.pd;
     const plusBox=u.plus?`<div class="pbox"><div class="lbl" style="display:flex;align-items:center;gap:6px;color:#60a5fa">${ic('sparkles',15)}Good Plus</div><div class="lbl">Цвет ника</div><div class="sws">${NICKS.map(c=>`<button data-a="pnick" data-v="${c}" class="${d.nick===c?'on':''}" style="background:${c}" aria-label="Цвет ника"></button>`).join('')}<button data-a="pnick" data-v="" class="${d.nick?'':'on'}" style="background:var(--card);color:var(--mut);display:grid;place-items:center" aria-label="По умолчанию">${ic('x',14)}</button></div><div class="lbl">Баннер профиля</div><div class="bnprev ${d.banner&&d.banner.startsWith('data:')?'':'bn'}" style="${bannerCss({plus:true,banner:d.banner,g:d.g})}"></div><div class="sws bw">${BANNERS.map((g,i)=>`<button data-a="pban" data-v="${i}" class="${d.banner==='g:'+i?'on':''}" style="background:${g}" aria-label="Баннер"></button>`).join('')}</div><div style="display:flex;gap:8px"><button class="sb" data-a="pbanup">Загрузить картинку</button>${d.banner?`<button class="sb rd" data-a="pban" data-v="x">Убрать</button>`:''}</div><input id="bf" type="file" accept="image/*" hidden></div>`:`<div class="pbox" style="align-items:center;text-align:center"><span style="color:var(--ind)">${ic('lock',22)}</span><b>Цвет ника и баннер: в Good Plus</b><button class="pb pl" style="max-width:260px" data-a="sheet" data-v="shop">${ic('sparkles',18)}Открыть магазин</button></div>`;
     b=`<div style="display:flex;flex-direction:column;gap:12px"><button data-a="pickphoto" style="align-self:center" aria-label="Фото">${av(d,92)}</button><input id="pf" type="file" accept="image/*" hidden><div class="colors">${GR.map((g,i)=>`<button data-a="pcol" data-v="${i}" class="${d.g===i&&!d.photo?'on':''}" style="background:linear-gradient(135deg,${g})" aria-label="Цвет"></button>`).join('')}</div>${d.photo?'<button data-a="rmphoto" style="color:#f43f5e;font-size:12px;font-weight:800">Убрать фото</button>':''}<input class="inp" id="pf1" data-d="first" maxlength="30" placeholder="Имя" value="${esc(d.first)}"><input class="inp" id="pf2" data-d="last" maxlength="30" placeholder="Фамилия" value="${esc(d.last)}"><input class="inp" id="pf3" data-d="un" maxlength="20" placeholder="@юзернейм" value="${esc(d.un)}"><input class="inp" id="pf4" data-d="bio" maxlength="140" placeholder="О себе" value="${esc(d.bio)}"><input class="inp" id="pf5" data-d="email" type="email" placeholder="Почта" value="${esc(d.email)}">${plusBox}${ui.perr?`<p class="err" style="margin:0;text-align:left">${esc(ui.perr)}</p>`:''}<button class="pb" data-a="psave">Сохранить</button></div>`}
+  if(s==='report'){const r=ui.rp;const o=r&&usr(r.uid);if(!o)return '';t='Пожаловаться';
+    b=`<p class="hint" style="margin-bottom:12px;font-size:14px">Жалоба на <b>${esc(full(o))}</b> (@${esc(o.un)}) уйдёт администраторам. Пользователь об этом не узнает.</p><div class="stack">${REASONS.map(x=>`<button class="${r.reason===x?'pb':'sb'}" data-a="rrs" data-v="${x}">${x}</button>`).join('')}<input class="inp" id="rtx" data-r="text" maxlength="300" placeholder="Подробности (необязательно)" autocomplete="off"><button class="pb dg" data-a="rsend" ${r.reason?'':'disabled style="opacity:.45"'}>Отправить жалобу</button></div>`}
   if(s==='logout'){t='Выйти из аккаунта?';b=`<p class="hint" style="margin-bottom:12px;font-size:14px">Вы сможете войти снова по коду из письма. Чаты сохранятся.</p><div class="stack"><button class="pb dg" data-a="dologout">Выйти</button><button class="gb" data-a="close">Отмена</button></div>`}
   return `<div class="ov${fx}" data-a="close" data-bg="1"><div class="sheet${fx}" data-stop="1"><h2>${t}<button class="ib" style="width:34px;height:34px;color:var(--tx)" data-a="close" aria-label="Закрыть">${ic('x',20)}</button></h2>${b}</div></div>`;
 }
@@ -513,7 +547,7 @@ function mainView(){
   const ti=T.findIndex(x=>x[0]===ui.tab),pi=navPrev===null?ti:navPrev;
   return `<div class="main ${ui.chat?'open':''}"><aside class="${FX.pane==='list'?'list-in':''}"><div class="tabwrap${FX.tab?' stag tab-'+FX.tab:''}${FX.pane==='list'?' stag':''}">${tabView()}</div><nav class="nav" style="--n:${T.length}"><span class="ind" style="--i:${pi}"></span>${T.map(([k,l,i])=>`<button class="${ui.tab===k?'on':''}${FX.tab&&ui.tab===k?' bump':''}" data-a="tab" data-v="${k}"><span>${ic(i,24)}</span>${l}${k==='friends'&&inc?`<i class="badge">${inc}</i>`:''}</button>`).join('')}</nav></aside><section class="pane ${FX.pane==='open'?'open-in':''}">${chatView()}</section></div>${sheetView()}`;
 }
- 
+
 /* ---------- actions ---------- */
 function reqCode(){
   const em=A.email.trim().toLowerCase();
@@ -529,14 +563,18 @@ function checkCode(v){
   if(c.code!==v){c.att++;save();A.err='Неверный код. Проверьте письмо и попробуйте ещё раз.';draw();return}
   A.code=v;A.err='';$('#toast').innerHTML='';
   const u=D.u.find(u=>u.email===em);
-  if(u){delete D.codes[em];save();login(u.id)}else{A.step='profile';A.fx=true;draw()}
+  checkBan(em).then(b=>{
+    if(b){A.step='email';A.err='Этот аккаунт заблокирован администратором.';A.fx=true;draw();return}
+    D=load();
+    if(u){delete D.codes[em];save();login(u.id)}else{A.step='profile';A.fx=true;draw()}
+  });
 }
 function register(){
   const p=A.p,un=p.un.trim().toLowerCase().replace(/^@/,'');D=load();
   if(!p.first.trim()){A.err='Укажите имя.';return draw()}
   if(!UNRE.test(un)){A.err='Юзернейм: 3–20 символов, латиница, цифры и _.';return draw()}
   if(D.u.some(u=>u.un===un)){A.err='Этот юзернейм уже занят — выберите другой.';return draw()}
-  const u={id:D.n++,email:A.email,un,first:p.first.trim(),last:p.last.trim(),bio:'',g:p.g,photo:p.photo};
+  const u={id:D.n++,email:A.email,un,first:p.first.trim(),last:p.last.trim(),bio:'',g:p.g,photo:p.photo,ts:Date.now()};
   D.u.push(u);delete D.codes[A.email];save();login(u.id);
 }
 function login(id){sessionStorage.gh7s=id;A={fx:true,step:'email',email:'',code:'',err:'',left:0,p:{first:'',last:'',un:'',g:0,photo:null}};ui={tab:'chats',chat:null,sheet:null,q:'',fq:'',pd:null,perr:'',tray:false,att:false,uid:null,fid:null,sid:null,sd:null,fx:{}};inited=false;draw();tick()}
@@ -601,6 +639,9 @@ document.addEventListener('click',e=>{
   else if(a==='cacc')acceptCall();
   else if(a==='cdec')declineCall();
   else if(a==='uprof'){ui.sheet='user';ui.uid=+v;ui.fx={sheet:1};draw()}
+  else if(a==='report'){ui.rp={uid:+v,reason:'',text:''};ui.sheet='report';ui.fx={sheet:1};draw()}
+  else if(a==='rrs'){ui.rp.reason=v;draw()}
+  else if(a==='rsend')sendReport();
   else if(a==='unfriend')mut(()=>{const x=+v;D.f=D.f.filter(f=>!((f.a===meId()&&f.b===x)||(f.a===x&&f.b===meId())))});
   else if(a==='plusbuy'){mut(()=>{me().plus=true});toast('Good Plus активен','Стикеры, цвет ника и баннер уже доступны')}
   else if(a==='plusoff')mut(()=>{me().plus=false});
@@ -628,6 +669,7 @@ document.addEventListener('input',e=>{
   else if(t.dataset.k==='q'){ui.q=t.value;draw()}
   else if(t.dataset.k==='fq'){ui.fq=t.value;draw()}
   else if(t.dataset.p){A.p[t.dataset.p]=t.dataset.p==='un'?t.value.toLowerCase().replace(/[^a-z0-9_]/g,''):t.value;if(t.dataset.p==='un')t.value=A.p.un}
+  else if(t.dataset.r){ui.rp[t.dataset.r]=t.value}
   else if(t.dataset.s){ui.sd[t.dataset.s]=t.value}
   else if(t.dataset.d){ui.pd[t.dataset.d]=t.dataset.d==='un'?t.value.toLowerCase().replace(/[^a-z0-9_]/g,''):t.value;if(t.dataset.d==='un')t.value=ui.pd.un}
   else if(t.dataset.o!==undefined){
@@ -671,7 +713,7 @@ function saveProfile(){
   const u=me();Object.assign(u,{first:d.first.trim(),last:d.last.trim(),un,bio:d.bio.trim(),email:em,g:d.g,photo:d.photo});
   if(u.plus){u.nick=d.nick||'';u.banner=d.banner||null}save();closeSheet();toast('Профиль сохранён','Изменения применены');
 }
- 
+
 /* ---------- истории и лента ---------- */
 const STBG=['linear-gradient(135deg,#0b1e4a,#2563eb)','linear-gradient(135deg,#0f172a,#1d4ed8)','linear-gradient(135deg,#1e3a8a,#0ea5e9)','linear-gradient(135deg,#064e3b,#1d4ed8)','linear-gradient(135deg,#4338ca,#0b1e4a)','linear-gradient(135deg,#9f1239,#1e3a8a)'];
 const active=x=>Date.now()-x.ts<864e5;
@@ -701,7 +743,8 @@ function sendComment(){
 async function publishStory(toFeed){
   const d=ui.sd;let fid=null;
   if(d.mode==='img'){fid='f'+Date.now().toString(36)+Math.random().toString(36).slice(2,6);try{await idbPut(fid,d.file)}catch{return toast('Не удалось сохранить фото','Не хватает места в браузере')}}
-  mut(()=>{D.s.push({id:D.n++,uid:meId(),k:d.mode,fid,w:d.w,h:d.h,text:(d.text||'').trim(),bg:d.bg,cap:(d.cap||'').trim(),ts:Date.now(),feed:!!toFeed,likes:[],cm:[],seen:[meId()]})});
+  const th=d.mode==='img'?await thumbOf(d.file):null;
+  mut(()=>{D.s.push({id:D.n++,uid:meId(),k:d.mode,th,fid,w:d.w,h:d.h,text:(d.text||'').trim(),bg:d.bg,cap:(d.cap||'').trim(),ts:Date.now(),feed:!!toFeed,likes:[],cm:[],seen:[meId()]})});
   try{d.url&&URL.revokeObjectURL(d.url)}catch{}
   ui.sd=null;closeSheet();ui.tab=toFeed?'feed':ui.tab;
   toast(toFeed?'История в ленте':'История опубликована',toFeed?'Её видят все в GoodHi':'Друзья увидят её на 24 часа');
@@ -738,7 +781,7 @@ function svPrev(){if(!SV)return;if(SV.i>0&&SV.el<1500)SV.i--;svShow()}
 function svClose(){clearInterval(SVT);SV=null;const c=$('#sview');if(c)c.innerHTML='';draw()}
 document.addEventListener('pointerdown',e=>{if(SV&&e.target.closest&&e.target.closest('.svzone')){SV.hold=true;SV.pd=Date.now()}});
 ['pointerup','pointercancel'].forEach(ev=>document.addEventListener(ev,()=>{if(SV)SV.hold=false}));
- 
+
 /* ---------- звонки (WebRTC; сигналы идут между вкладками этого браузера) ---------- */
 let CALL=null,ringT=null,callT=null;
 const RTC={iceServers:[{urls:'stun:stun.l.google.com:19302'}]};
@@ -874,7 +917,7 @@ function callUpdate(){
   pip.style.display=lt?'block':'none';pip.classList.toggle('scr',!!c.scr);
 }
 window.addEventListener('beforeunload',()=>{if(CALL)sig({t:'end',to:CALL.peer,id:CALL.id})});
- 
+
 /* ---------- live updates (2nd tab / window) ---------- */
 function tick(){
   if(!meId())return;
@@ -887,7 +930,7 @@ function tick(){
   });
   if(ch)save();
   // уведомления
-  const u=me();if(!u)return;
+  const u=me();if(!u)return;banPoll();
   mine.forEach(c=>{const ms=cmsgs(c.id),l=ms[ms.length-1];if(!l)return;const prev=seen[c.id]??0;
     if(inited&&l.id>prev&&l.from!==meId()&&ui.chat!==c.id){const o=usr(l.from);if(cfg.on){toast(o?full(o):'Новое сообщение',cfg.preview?l.t:'Новое сообщение',false,c.id);if(cfg.sound)beep()}}
     seen[c.id]=Math.max(prev,l.id)});
@@ -906,8 +949,7 @@ function tick(){
 }
 window.addEventListener('storage',e=>{if(e.key==='gh7')tick();else if(e.key==='gh7sig'&&e.newValue){try{onSig(JSON.parse(e.newValue))}catch{}}});
 setInterval(()=>{if(document.visibilityState==='visible')tick()},1200);
-draw();tick();
+draw();tick();cloudPush();
 </script>
 </body>
 </html>
- 
