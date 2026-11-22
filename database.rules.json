@@ -65,6 +65,30 @@
         ".read": true,
         ".write": "!data.exists() || data.val() === newData.val()"
       }
+    },
+    "rel": {
+      "$k": {
+        ".read": true,
+        "$o": {
+          ".write": true
+        }
+      }
+    },
+    "dm": {
+      "$ck": {
+        ".read": true,
+        "$m": {
+          ".write": "!data.exists()"
+        }
+      }
+    },
+    "rcpt": {
+      "$ck": {
+        ".read": true,
+        "$k": {
+          ".write": true
+        }
+      }
     }
   }
 }

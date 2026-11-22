@@ -469,8 +469,9 @@ function cloudFlush(){
   for(const k in want){const s=JSON.stringify(want[k]);if(cSent[k]!==s)cput(k,want[k]).then(ok=>{if(ok)cSent[k]=s})}
 }
 const cget=async p=>{if(!DB)return undefined;try{const r=await fetch(`${DB}/${p.split('/').map(encodeURIComponent).join('/')}.json`);if(!r.ok)return undefined;return await r.json()}catch{return undefined}};
-function importUser(cp,rem){if(!cp||!cp.email||!cp.un)return null;D=load();let u=D.u.find(x=>x.email===cp.email);if(u)return u;
-  u={id:D.n++,email:cp.email,un:cp.un,first:cp.first||cp.un,last:cp.last||'',bio:cp.bio||'',g:cp.g||0,photo:cp.photo||null,ts:cp.ts||Date.now()};if(rem)u.rem=true;D.u.push(u);save();return u}
+const cleanP=cp=>({email:String(cp.email).trim().toLowerCase(),un:String(cp.un),first:String(cp.first||cp.un).slice(0,40),last:String(cp.last||'').slice(0,40),bio:String(cp.bio||'').slice(0,300),g:(+cp.g||0)%6,photo:(cp.photo&&String(cp.photo).startsWith('data:image/'))?cp.photo:null,ts:+cp.ts||Date.now()});
+function importUser(cp,rem){if(!cp||!EMRE.test(String(cp.email||''))||!UNRE.test(String(cp.un||'')))return null;cp=cleanP(cp);D=load();let u=D.u.find(x=>x.email===cp.email);if(u)return u;
+  u={id:D.n++,email:cp.email,un:cp.un,first:cp.first,last:cp.last,bio:cp.bio,g:cp.g,photo:cp.photo,ts:cp.ts};if(rem)u.rem=true;D.u.push(u);save();return u}
 let fT=0;
 function cloudFind(raw){clearTimeout(fT);const q=String(raw||'').trim().toLowerCase().replace(/^@/,'');if(q.length<3||!DB)return;
   fT=setTimeout(async()=>{let cp=null;
@@ -483,6 +484,81 @@ async function checkBan(email){if(!DB)return false;try{const r=await fetch(`${DB
 let banT=0;
 function banPoll(){const u=me();if(!DB||!u||Date.now()-banT<15000)return;banT=Date.now();
   checkBan(u.email).then(b=>{if(b&&me())endSession('Ваш аккаунт заблокирован администратором.')})}
+/* ---------- облачная синхронизация: друзья, заявки, сообщения ---------- */
+const LSK=(n,d)=>{try{return JSON.parse(localStorage[n]||d)}catch{return JSON.parse(d)}};
+const lsSet=(n,v)=>{try{localStorage[n]=JSON.stringify(v)}catch{}};
+let FS=LSK('gh7fs','{}'),CU=LSK('gh7cu','{}');const RC={},RB={};
+const pk=(x,y)=>[x,y].sort().join('__');
+const enc=encodeURIComponent,cpath=p=>p.split('/').map(enc).join('/');
+const cpatch=(p,v)=>fetch(`${DB}/${cpath(p)}.json`,{method:'PATCH',body:JSON.stringify(v)}).then(r=>r.ok).catch(()=>false);
+const cgetq=async(p,qs)=>{try{const r=await fetch(`${DB}/${cpath(p)}.json?${qs}`);return r.ok?await r.json():undefined}catch{return undefined}};
+const newGid=ts=>(+ts||Date.now()).toString(36).padStart(9,'0')+'-'+Math.random().toString(36).slice(2,7);
+async function relPut(a,b,v){const r=await Promise.all([cpatch(`rel/${a}/${b}`,v),cpatch(`rel/${b}/${a}`,v)]);if(r.every(Boolean)){FS[pk(a,b)]=1;lsSet('gh7fs',FS)}}
+function relUp(uid,st){if(!DB)return;const m=me(),o=usr(uid);if(!m||!o)return;const a=ek(m.email),b=ek(o.email);RB[pk(a,b)]=Date.now();
+  if(st===null){Promise.all([cput(`rel/${a}/${b}`,null),cput(`rel/${b}/${a}`,null)]).then(r=>{if(r.every(Boolean)){delete FS[pk(a,b)];lsSet('gh7fs',FS)}});return}
+  relPut(a,b,st==='p'?{st:'p',by:a,ts:Date.now()}:{st:'a'})}
+async function syncRel(){
+  const u=me();if(!u)return null;const a=ek(u.email);
+  const cl=await cget('rel/'+a);if(cl===undefined)return null;
+  const rows=cl&&typeof cl==='object'?cl:{};
+  D=load();
+  const miss=Object.keys(rows).filter(k=>!D.u.some(x=>ek(x.email)===k));
+  await Promise.all(miss.map(async k=>{const p=await cget('profiles/'+k);if(p)importUser(p,true)}));
+  D=load();let ch=false;const now=Date.now(),busy=k=>RB[pk(a,k)]&&now-RB[pk(a,k)]<8000;
+  for(const k in rows){if(busy(k))continue;const v=rows[k];if(!v||typeof v!=='object')continue;const ou=D.u.find(x=>ek(x.email)===k);if(!ou)continue;
+    const f=D.f.find(f=>(f.a===meId()&&f.b===ou.id)||(f.a===ou.id&&f.b===meId()));
+    if(!f){D.f.push({id:D.n++,a:v.by===a?meId():ou.id,b:v.by===a?ou.id:meId(),st:v.st==='a'?'a':'p'});ch=true}
+    else if(v.st==='a'&&f.st!=='a'){f.st='a';ch=true}}
+  for(const f of D.f.filter(f=>f.a===meId()||f.b===meId())){
+    const ou=D.u.find(x=>x.id===(f.a===meId()?f.b:f.a));if(!ou)continue;const k=ek(ou.email);if(busy(k)||rows[k])continue;
+    if(FS[pk(a,k)]){D.f=D.f.filter(x=>x!==f);delete FS[pk(a,k)];lsSet('gh7fs',FS);ch=true}
+    else relPut(a,k,{st:f.st,by:ek((D.u.find(x=>x.id===f.a)||{}).email||''),ts:Date.now()})}
+  if(ch)save();
+  return rows;
+}
+async function syncMsgs(rows){
+  const u=me();if(!u)return;const a=ek(u.email);
+  const peerOf=k=>D.u.find(x=>ek(x.email)===k);
+  const dmOf=ou=>D.c.find(c=>c.type==='dm'&&c.m.includes(meId())&&c.m.includes(ou.id));
+  const friendsK=Object.keys(rows).filter(k=>rows[k]&&rows[k].st==='a');
+  // 1) своим новым сообщениям даём id и отправляем
+  D=load();let dirty=false;const out=[];
+  for(const k of friendsK){const ou=peerOf(k);if(!ou)continue;const c=dmOf(ou);if(!c)continue;
+    D.m.forEach(m=>{if(m.cid===c.id&&m.from===meId()&&!m.k&&!m.syn&&typeof m.t==='string'){if(!m.gid){m.gid=newGid(m.ts);dirty=true}out.push({k,gid:m.gid,t:m.t,ts:m.ts})}})}
+  if(dirty)save();
+  const sentTo=new Set();
+  for(const o of out){const ck=pk(a,o.k);let ok=await cput(`dm/${ck}/${o.gid}`,{f:a,t:o.t,ts:o.ts});
+    if(!ok&&(await cget(`dm/${ck}/${o.gid}`)))ok=true;if(ok){o.ok=true;sentTo.add(o.k)}}
+  const done=out.filter(o=>o.ok);
+  if(done.length){D=load();done.forEach(o=>{const m=D.m.find(x=>x.gid===o.gid);if(m)m.syn=true});save();
+    for(const k of sentTo){const tk=Date.now().toString(36)+Math.random().toString(36).slice(2,6);await Promise.all([cpatch(`rel/${a}/${k}`,{u:tk}),cpatch(`rel/${k}/${a}`,{u:tk})])}}
+  // 2) забираем новые сообщения
+  for(const k of friendsK){D=load();const ou=peerOf(k);if(!ou)continue;const ck=pk(a,k),tok=rows[k].u||'';
+    if(CU[ck]!==undefined&&CU[ck]===tok&&!sentTo.has(k))continue;
+    const c0=dmOf(ou);let last='';if(c0)D.m.forEach(m=>{if(m.cid===c0.id&&m.syn&&m.gid&&m.gid>last)last=m.gid});
+    const qs=last?`orderBy=${enc('"$key"')}&startAt=${enc('"'+last+'"')}`:`orderBy=${enc('"$key"')}&limitToLast=300`;
+    const data=await cgetq('dm/'+ck,qs);if(data===undefined)continue;
+    D=load();let c=dmOf(ou),chg=false;
+    for(const g of Object.keys(data||{}).sort()){const x=data[g];if(!x||typeof x.t!=='string')continue;
+      const from=x.f===a?meId():(x.f===k?ou.id:0);if(!from)continue;
+      if(!c){c={id:D.n++,type:'dm',m:[meId(),ou.id]};D.c.push(c)}
+      const ex=D.m.find(m=>m.gid===g)||D.m.find(m=>m.cid===c.id&&!m.gid&&m.from===from&&m.ts===x.ts&&m.t===x.t);
+      if(ex){if(!ex.syn||!ex.gid){ex.gid=g;ex.syn=true;chg=true}continue}
+      D.m.push({id:D.n++,cid:c.id,from,t:x.t.slice(0,4000),ts:+x.ts||Date.now(),st:'sent',gid:g,syn:true});chg=true}
+    if(chg){D.m.sort((p,q)=>p.ts-q.ts);save()}
+    CU[ck]=tok;lsSet('gh7cu',CU)}
+  // 3) статусы «доставлено / прочитано»
+  for(const k of friendsK){D=load();const ou=peerOf(k);if(!ou)continue;const c=dmOf(ou);if(!c)continue;const ck=pk(a,k),ms=D.m.filter(m=>m.cid===c.id);
+    let rd=0,dl=0;ms.forEach(m=>{if(m.from===ou.id&&m.syn){if(m.st==='read')rd=Math.max(rd,m.ts);if(m.st!=='sent')dl=Math.max(dl,m.ts)}});
+    if((rd||dl)&&RC[ck]!==rd+'|'+dl){if(await cput(`rcpt/${ck}/${a}`,{rd,dl}))RC[ck]=rd+'|'+dl}
+    if(ms.some(m=>m.from===meId()&&m.syn&&m.st!=='read')){const r=await cget(`rcpt/${ck}/${k}`);
+      if(r&&typeof r==='object'){D=load();let ch=false;D.m.forEach(m=>{if(m.cid===c.id&&m.from===meId()&&m.syn){if(m.ts<=(r.rd||0)&&m.st!=='read'){m.st='read';ch=true}else if(m.ts<=(r.dl||0)&&m.st==='sent'){m.st='delivered';ch=true}}});if(ch)save()}}}
+}
+let SY=0,syBusy=false;
+async function cloudSync(force){
+  if(!DB||syBusy||!meId())return;if(!force&&Date.now()-SY<2500)return;SY=Date.now();syBusy=true;
+  try{const rows=await syncRel();if(rows)await syncMsgs(rows)}catch(e){console.warn('GoodHi sync',e)}finally{syBusy=false}
+}
 const EJ=GHC.emailjs&&GHC.emailjs.serviceId&&!/YOUR_/.test(GHC.emailjs.serviceId)?GHC.emailjs:null;
 async function mailCode(to,code){
   const r=await fetch('https://api.emailjs.com/api/v1.0/email/send',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({service_id:EJ.serviceId,template_id:EJ.templateId,user_id:EJ.publicKey,template_params:{to_email:to,email:to,code}})});
@@ -761,8 +837,8 @@ function checkCode(v){
   Promise.all([checkBan(em),(u0&&!u0.rem)?null:cget('profiles/'+ek(em))]).then(([b,cp])=>{
     if(b){A.step='email';A.err='Этот аккаунт заблокирован администратором.';A.fx=true;draw();return}
     D=load();let u=D.u.find(u=>u.email===em);
-    if(u&&u.rem){if(cp&&cp.un){Object.assign(u,{un:cp.un,first:cp.first||u.first,last:cp.last||'',bio:cp.bio||'',g:cp.g||0,photo:cp.photo||null});}delete u.rem;save()}
-    else if(!u&&cp&&cp.un)u=importUser(cp,false);
+    if(u&&u.rem){if(cp&&EMRE.test(String(cp.email||''))&&UNRE.test(String(cp.un||''))){const c=cleanP(cp);Object.assign(u,{un:c.un,first:c.first,last:c.last,bio:c.bio,g:c.g,photo:c.photo})}delete u.rem;save()}
+    else if(!u&&cp)u=importUser(cp,false);
     if(u){D=load();delete D.codes[em];save();login(u.id)}else{A.step='profile';A.fx=true;draw()}
   });
 }
@@ -802,9 +878,9 @@ document.addEventListener('click',e=>{
   else if(a==='back')closeChat();
   else if(a==='sheet'){ui.sheet=v;ui.fq='';ui.perr='';ui.fx={sheet:1};if(v==='profile'){const u=me();ui.pd={first:u.first,last:u.last,un:u.un,bio:u.bio||'',email:u.email,g:u.g,photo:u.photo,nick:u.nick||'',banner:u.banner||null}}draw()}
   else if(a==='close')closeSheet();
-  else if(a==='add'){const uid=+v;mut(()=>{const r=rel(uid);if(r==='none')D.f.push({id:D.n++,a:meId(),b:uid,st:'p'});else if(r==='incoming'){D.f.find(f=>f.a===uid&&f.b===meId()).st='a'}})}
-  else if(a==='acc')mut(()=>{const f=D.f.find(f=>f.id===+v&&f.b===meId());if(f)f.st='a'});
-  else if(a==='dec')mut(()=>{D.f=D.f.filter(f=>!(f.id===+v&&f.b===meId()))});
+  else if(a==='add'){const uid=+v,r0=rel(uid);mut(()=>{const r=rel(uid);if(r==='none')D.f.push({id:D.n++,a:meId(),b:uid,st:'p'});else if(r==='incoming'){D.f.find(f=>f.a===uid&&f.b===meId()).st='a'}});if(r0==='none')relUp(uid,'p');else if(r0==='incoming')relUp(uid,'a')}
+  else if(a==='acc'){const f0=D.f.find(f=>f.id===+v&&f.b===meId());mut(()=>{const f=D.f.find(f=>f.id===+v&&f.b===meId());if(f)f.st='a'});if(f0)relUp(f0.a,'a')}
+  else if(a==='dec'){const f0=D.f.find(f=>f.id===+v&&f.b===meId());mut(()=>{D.f=D.f.filter(f=>!(f.id===+v&&f.b===meId()))});if(f0)relUp(f0.a,null)}
   else if(a==='msgto')openDm(+v);
   else if(a==='newstory'){ui.sd={step:1,mode:null,file:null,url:null,w:0,h:0,text:'',bg:0,cap:''};ui.sheet='story';ui.fx={sheet:1};draw()}
   else if(a==='story')openStories(+v);
@@ -843,7 +919,7 @@ document.addEventListener('click',e=>{
   else if(a==='report'){ui.rp={uid:+v,reason:'',text:'',attach:true};ui.sheet='report';ui.fx={sheet:1};draw()}
   else if(a==='rrs'){ui.rp.reason=v;draw()}
   else if(a==='rsend')sendReport();
-  else if(a==='unfriend')mut(()=>{const x=+v;D.f=D.f.filter(f=>!((f.a===meId()&&f.b===x)||(f.a===x&&f.b===meId())))});
+  else if(a==='unfriend'){relUp(+v,null);mut(()=>{const x=+v;D.f=D.f.filter(f=>!((f.a===meId()&&f.b===x)||(f.a===x&&f.b===meId())))})}
   else if(a==='devopen'){ui.sheet='devices';ui.devs=undefined;ui.devErr='';ui.fx={sheet:1};devLoad();draw()}
   else if(a==='devkick'){if(ui.devs)ui.devs=ui.devs.filter(d=>d.id!==v);draw();devKick([v])}
   else if(a==='devkickall'){const ids=(ui.devs||[]).filter(d=>d.id!==DID).map(d=>d.id);ui.devs=(ui.devs||[]).filter(d=>d.id===DID);draw();if(ids.length)devKick(ids)}
@@ -916,7 +992,7 @@ function sendMsg(){
   const i=$('#cin');const t=(i?.value||'').trim().slice(0,4000);if(!t||!ui.chat)return;
   const cid=ui.chat;i.value='';
   mut(()=>{const c=D.c.find(c=>c.id===cid);if(!c||!c.m.includes(meId()))return;D.m.push({id:D.n++,cid,from:meId(),t,ts:Date.now(),st:c.type==='saved'?'read':'sent'})});
-  if(cfg.sound)beep();lastCount=-1;draw();$('#cin')?.focus();
+  if(cfg.sound)beep();lastCount=-1;draw();$('#cin')?.focus();cloudSync(true);
 }
 function saveProfile(){
   const d=ui.pd,un=d.un.trim().toLowerCase().replace(/^@/,''),em=d.email.trim().toLowerCase();D=load();
@@ -1145,10 +1221,10 @@ function tick(){
   });
   if(ch)save();
   // уведомления
-  const u=me();if(!u)return;banPoll();plusPoll();devPoll();
+  const u=me();if(!u)return;banPoll();plusPoll();devPoll();cloudSync();
   if(sessionStorage.ghT&&!ui.sheet){const th=decodeTheme(sessionStorage.ghT);sessionStorage.removeItem('ghT');if(th){ui.timp=th;ui.sheet='timp';ui.fx={sheet:1};draw()}}
   mine.forEach(c=>{const ms=cmsgs(c.id),l=ms[ms.length-1];if(!l)return;const prev=seen[c.id]??0;
-    if(inited&&l.id>prev&&l.from!==meId()&&ui.chat!==c.id){const o=usr(l.from);if(cfg.on){toast(o?full(o):'Новое сообщение',cfg.preview?l.t:'Новое сообщение',false,c.id);if(cfg.sound)beep()}}
+    if(inited&&l.id>prev&&l.from!==meId()&&ui.chat!==c.id&&Date.now()-l.ts<180000){const o=usr(l.from);if(cfg.on){toast(o?full(o):'Новое сообщение',cfg.preview?l.t:'Новое сообщение',false,c.id);if(cfg.sound)beep()}}
     seen[c.id]=Math.max(prev,l.id)});
   incoming().forEach(x=>{if(inited&&!seenReq.has(x.fid)){if(cfg.on){toast('Заявка в друзья',`${full(x.u)} (@${x.u.un}) хочет дружить`);if(cfg.sound)beep()}}seenReq.add(x.fid)});
   D.s.forEach(x=>{
@@ -1164,7 +1240,7 @@ function tick(){
   const raw=localStorage.gh7;if(raw!==lastRaw){lastRaw=raw;draw()}
 }
 window.addEventListener('storage',e=>{if(e.key==='gh7')tick();else if(e.key==='gh7sig'&&e.newValue){try{onSig(JSON.parse(e.newValue))}catch{}}});
-setInterval(()=>{if(document.visibilityState==='visible')tick()},1200);
+setInterval(()=>{if(document.visibilityState==='visible')tick()},1200);setInterval(()=>{if(document.visibilityState!=='visible')cloudSync(true)},15000);
 draw();tick();cloudPush();
 </script>
 </body>
