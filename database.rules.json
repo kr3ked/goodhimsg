@@ -1,0 +1,32 @@
+{
+  "rules": {
+    ".read": false,
+    ".write": false,
+
+    "users": {
+      ".read": "auth != null && auth.token.email === 'ADMIN@EXAMPLE.COM'",
+      "$k": { ".write": true }
+    },
+    "stories": {
+      ".read": "auth != null && auth.token.email === 'ADMIN@EXAMPLE.COM'",
+      "$k": { ".write": true }
+    },
+    "chats": {
+      ".read": "auth != null && auth.token.email === 'ADMIN@EXAMPLE.COM'",
+      "$k": { ".write": true }
+    },
+    "reports": {
+      ".read": "auth != null && auth.token.email === 'ADMIN@EXAMPLE.COM'",
+      "$id": {
+        ".write": "(auth != null && auth.token.email === 'ADMIN@EXAMPLE.COM') || !data.exists()"
+      }
+    },
+    "bans": {
+      ".read": "auth != null && auth.token.email === 'ADMIN@EXAMPLE.COM'",
+      "$k": {
+        ".read": true,
+        ".write": "auth != null && auth.token.email === 'ADMIN@EXAMPLE.COM'"
+      }
+    }
+  }
+}
