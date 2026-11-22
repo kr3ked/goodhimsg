@@ -48,6 +48,11 @@ header h1{font-size:22px;font-weight:800;flex:1}
 .err{color:var(--red);font-size:14px;margin:6px 0 10px}
 #toast{position:fixed;left:50%;bottom:24px;transform:translateX(-50%);max-width:92vw;text-align:center;background:var(--tx);color:var(--bg);padding:10px 18px;border-radius:14px;font-weight:700;opacity:0;pointer-events:none;transition:opacity .25s;z-index:9}
 #toast.on{opacity:1}
+.chatbox{background:var(--soft);border-radius:14px;padding:10px;margin:10px 0;max-height:380px;overflow:auto;display:flex;flex-direction:column;gap:8px}
+.cm{max-width:88%;padding:8px 12px;border-radius:14px;background:var(--card)}
+.cm.me{align-self:flex-end;background:rgba(59,130,246,.2)}
+.cm.tg{align-self:flex-start;box-shadow:inset 0 0 0 1.5px rgba(244,63,94,.6)}
+.cn{font-size:12px;color:var(--mut);margin-bottom:2px}.cb{overflow-wrap:anywhere;white-space:pre-wrap}
 code{background:var(--soft);padding:1px 6px;border-radius:6px}
 </style>
 </head>
@@ -64,7 +69,8 @@ const nm=u=>u?((u.first||'')+' '+(u.last||'')).trim()||'—':'—';
 const ini=n=>String(n).split(' ').filter(Boolean).map(w=>w[0]).slice(0,2).join('').toUpperCase()||'?';
 const okImg=s=>typeof s==='string'&&s.startsWith('data:image/');
 const BG=['#2563eb','#0d9488','#e11d48','#d97706','#0ea5e9','#4338ca','#7c3aed','#be123c'];
-let tok=null,exp=0,tab='reports',q='',data={users:{},stories:{},chats:{},reports:{},bans:{}},loginErr='',timer=null;
+const openC=new Set();
+let tok=null,exp=0,tab='reports',q='',data={users:{},stories:{},chats:{},reports:{},bans:{},orders:{},plus:{}},loginErr='',timer=null;
 
 /* ---------- Firebase Auth (REST) ---------- */
 async function signIn(email,pw){
@@ -88,7 +94,7 @@ async function api(path,method='GET',body){
 }
 function adminEmail(){try{return JSON.parse(atob(tok.split('.')[1].replace(/-/g,'+').replace(/_/g,'/'))).email||''}catch{return ''}}
 async function loadAll(){
-  const names=['users','stories','chats','reports','bans'];
+  const names=['users','stories','chats','reports','bans','orders','plus'];
   const res=await Promise.allSettled(names.map(n=>api(n)));
   const failed=[];
   res.forEach((r,i)=>{
@@ -121,10 +127,14 @@ function paint(){
   if($('#who')&&tok)$('#who').textContent=adminEmail();
   const nrep=Object.keys(data.reports).length;
   $('#stats').innerHTML=[['Пользователей',Object.keys(data.users).length],['Историй',Object.keys(data.stories).length],['Чатов',Object.keys(data.chats).length],['Жалоб',nrep],['В бане',Object.keys(data.bans).length]].map(([l,n])=>`<div class="stat"><b>${n}</b><span>${l}</span></div>`).join('');
-  $('#tabs').innerHTML=[['reports','Жалобы'],['users','Пользователи'],['stories','Истории'],['chats','Чаты и группы']].map(([k,l])=>`<button class="${tab===k?'on':''}" data-a="tab" data-v="${k}">${l}${k==='reports'&&nrep?`<i>${nrep}</i>`:''}</button>`).join('');
+  $('#tabs').innerHTML=[['reports','Жалобы'],['orders','Оплаты'],['users','Пользователи'],['stories','Истории'],['chats','Чаты и группы']].map(([k,l])=>{const n=k==='reports'?nrep:k==='orders'?Object.keys(data.orders).length:0;return `<button class="${tab===k?'on':''}" data-a="tab" data-v="${k}">${l}${n?`<i>${n}</i>`:''}</button>`}).join('');
   const sw=$('#sw'),had=document.getElementById('q');
   if(tab==='users'){if(!had)sw.innerHTML=`<input class="inp" id="q" placeholder="Поиск: имя, @юзернейм или почта" value="${esc(q)}">`}else sw.innerHTML='';
-  $('#view').innerHTML={reports:vReports,users:vUsers,stories:vStories,chats:vChats}[tab]();
+  $('#view').innerHTML={reports:vReports,orders:vOrders,users:vUsers,stories:vStories,chats:vChats}[tab]();
+}
+function chatHtml(r){
+  const tn=r.targetName||'Нарушитель',rn='@'+(r.fromUn||'жалобщик');
+  return `<div class="chatbox">${r.chat.map(m=>`<div class="cm ${m.m?'me':'tg'}"><div class="cn">${m.m?esc(rn)+' · пожаловался':esc(tn)+' · на кого жалоба'} · ${fmt(m.ts)}</div><div class="cb">${esc(m.t)}</div></div>`).join('')}</div><div class="mut sm">Переписку приложил пользователь в момент жалобы (сообщений: ${r.chat.length}). Красной рамкой выделены сообщения того, на кого пожаловались.</div>`;
 }
 function vReports(){
   const arr=Object.entries(data.reports).map(([id,r])=>({id,...r})).sort((a,b)=>b.ts-a.ts);
@@ -134,17 +144,29 @@ function vReports(){
     return `<div class="card"><div class="rhead"><span><span class="tag red" style="margin:0">${esc(r.reason)}</span></span><span class="mut sm">${fmt(r.ts)}</span></div>
     <div class="who">${av(u,46,r.targetName)}<div class="grow"><b>${esc(r.targetName||nm(u))}</b> <span class="mut">@${esc(r.targetUn||(u&&u.un))}</span>${banned?'<span class="tag red">в бане</span>':''}<div class="mut sm">${esc((u&&u.email)||r.target)} · жалоб на пользователя: ${cnt[r.target]}</div></div></div>
     ${r.text?`<div class="rtext">${esc(r.text)}</div>`:''}
-    <div class="mut sm" style="margin-top:8px">Пожаловался: @${esc(r.fromUn)}</div>
-    <div class="btns"><button class="btn danger" data-a="ban" data-k="${esc(r.target)}" ${banned?'disabled':''}>Забанить</button><button class="btn" data-a="dismiss" data-id="${esc(r.id)}">Удалить жалобу</button></div></div>`}).join('');
+    ${r.chat&&r.chat.length&&openC.has(r.id)?chatHtml(r):''}
+    <div class="mut sm" style="margin-top:8px">Пожаловался: @${esc(r.fromUn)}${r.chat&&r.chat.length?'':' · переписка не приложена'}</div>
+    <div class="btns">${r.chat&&r.chat.length?`<button class="btn pri" data-a="chat" data-id="${esc(r.id)}">${openC.has(r.id)?'Скрыть переписку':'Переписка ('+r.chat.length+')'}</button>`:''}<button class="btn danger" data-a="ban" data-k="${esc(r.target)}" ${banned?'disabled':''}>Забанить</button><button class="btn" data-a="dismiss" data-id="${esc(r.id)}">Удалить жалобу</button></div></div>`}).join('');
+}
+function vOrders(){
+  const days=(C.plus&&+C.plus.days)||30;
+  const arr=Object.entries(data.orders).map(([id,o])=>({id,...o})).sort((x,y)=>y.ts-x.ts);
+  if(!arr.length)return empty('Заявок на оплату нет','Когда пользователь нажмёт «Я оплатил(а)», заявка появится здесь.');
+  return `<div class="card mut sm">Сначала сверьте платёж в кабинете платёжной системы (сумма и имя или почта плательщика), потом нажимайте «Выдать Plus».</div>`+arr.map(o=>{
+    const u=data.users[o.k],g=data.plus[o.k],has=g&&g.until>Date.now();
+    return `<div class="card"><div class="rhead"><span class="tag" style="margin:0">Оплата Plus</span><span class="mut sm">${fmt(o.ts)}</span></div>
+    <div class="who">${av(u,46,o.name)}<div class="grow"><b>${esc(o.name||nm(u))}</b> <span class="mut">@${esc(o.un)}</span>${has?'<span class="tag ok">Plus активен</span>':''}<div class="mut sm">${esc((u&&u.email)||o.k)}</div></div></div>
+    <div class="rtext">В платеже указано: ${esc(o.payer||'—')}</div>
+    <div class="btns"><button class="btn pri" data-a="grant" data-k="${esc(o.k)}" data-id="${esc(o.id)}">Выдать Plus на ${days} дн.</button><button class="btn" data-a="deny" data-id="${esc(o.id)}">Отклонить</button></div></div>`}).join('');
 }
 function vUsers(){
   const s=q.trim().toLowerCase().replace(/^@/,'');
   const arr=Object.entries(data.users).map(([k,u])=>({k,...u})).filter(u=>!s||(nm(u)+' '+u.un+' '+u.email).toLowerCase().includes(s)).sort((a,b)=>(b.ts||0)-(a.ts||0));
   if(!arr.length)return empty('Никого не найдено','');
   return arr.map(u=>{const banned=!!data.bans[u.k],n=Object.values(data.reports).filter(r=>r.target===u.k).length;
-    return `<div class="card who">${av(u,46)}<div class="grow"><b>${esc(nm(u))}</b> <span class="mut">@${esc(u.un)}</span>${u.plus?'<span class="tag pl">Plus</span>':''}${banned?'<span class="tag red">в бане</span>':''}${n?`<span class="tag red">жалоб: ${n}</span>`:''}
+    return `<div class="card who">${av(u,46)}<div class="grow"><b>${esc(nm(u))}</b> <span class="mut">@${esc(u.un)}</span>${(data.plus[u.k]&&data.plus[u.k].until>Date.now())?`<span class="tag pl">Plus до ${new Date(data.plus[u.k].until).toLocaleDateString('ru-RU')}</span>`:''}${banned?'<span class="tag red">в бане</span>':''}${n?`<span class="tag red">жалоб: ${n}</span>`:''}
     <div class="mut sm">${esc(u.email)} · регистрация: ${fmt(u.ts)}</div>${u.bio?`<div class="sm" style="margin-top:4px">${esc(u.bio)}</div>`:''}</div>
-    ${banned?`<button class="btn" data-a="unban" data-k="${esc(u.k)}">Разбанить</button>`:`<button class="btn danger" data-a="ban" data-k="${esc(u.k)}">Забанить</button>`}</div>`}).join('');
+    <div style="display:flex;flex-direction:column;gap:6px">${banned?`<button class="btn" data-a="unban" data-k="${esc(u.k)}">Разбанить</button>`:`<button class="btn danger" data-a="ban" data-k="${esc(u.k)}">Забанить</button>`}${(data.plus[u.k]&&data.plus[u.k].until>Date.now())?`<button class="btn" data-a="revoke" data-k="${esc(u.k)}">Забрать Plus</button>`:`<button class="btn pri" data-a="grant" data-k="${esc(u.k)}">Выдать Plus</button>`}</div></div>`}).join('');
 }
 function vStories(){
   const arr=Object.entries(data.stories).map(([k,s])=>({k,...s})).sort((a,b)=>b.ts-a.ts);
@@ -181,7 +203,11 @@ document.addEventListener('click',async e=>{
   else if(a==='logout'){delete sessionStorage.ghr;tok=null;clearInterval(timer);root()}
   else if(a==='refresh')run(()=>0,'Обновлено');
   else if(a==='tab'){tab=el.dataset.v;paint()}
+  else if(a==='chat'){const id=el.dataset.id;openC.has(id)?openC.delete(id):openC.add(id);paint()}
   else if(a==='dismiss')run(()=>api('reports/'+el.dataset.id,'DELETE'),'Жалоба удалена');
+  else if(a==='grant')run(async()=>{const k=el.dataset.k,days=(C.plus&&+C.plus.days)||30,cur=(data.plus[k]&&data.plus[k].until)||0;await api('plus/'+k,'PUT',{until:Math.max(Date.now(),cur)+days*864e5});if(el.dataset.id)await api('orders/'+el.dataset.id,'DELETE')},'Plus выдан');
+  else if(a==='deny')run(()=>api('orders/'+el.dataset.id,'DELETE'),'Заявка отклонена');
+  else if(a==='revoke'){if(confirm('Забрать Plus у пользователя?'))run(()=>api('plus/'+el.dataset.k,'DELETE'),'Plus отключён')}
   else if(a==='unban')run(()=>api('bans/'+el.dataset.k,'DELETE'),'Пользователь разбанен');
   else if(a==='ban'){
     const k=el.dataset.k,u=data.users[k];
