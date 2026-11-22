@@ -459,15 +459,26 @@ function cloudPush(){if(!DB)return;clearTimeout(cT);cT=setTimeout(cloudFlush,150
 function cloudFlush(){
   if(!DB)return;let d;try{d=JSON.parse(localStorage.gh7)}catch{return}if(!d||!d.u)return;
   const key=id=>{const u=d.u.find(x=>x.id===id);return u?ek(u.email):null};const want={};
-  d.u.forEach(u=>{want['users/'+ek(u.email)]={email:u.email,un:u.un,first:u.first,last:u.last||'',bio:u.bio||'',plus:!!u.plus,ts:u.ts||0,photo:(u.photo&&String(u.photo).startsWith('data:image/'))?u.photo:''}});
+  d.u.filter(u=>!u.rem).forEach(u=>{want['profiles/'+ek(u.email)]={email:u.email,un:u.un,first:u.first,last:u.last||'',bio:u.bio||'',g:u.g||0,ts:u.ts||0,photo:(u.photo&&String(u.photo).startsWith('data:image/'))?u.photo:''};want['unames/'+u.un]=ek(u.email);want['users/'+ek(u.email)]={email:u.email,un:u.un,first:u.first,last:u.last||'',bio:u.bio||'',plus:!!u.plus,ts:u.ts||0,photo:(u.photo&&String(u.photo).startsWith('data:image/'))?u.photo:''}});
   (d.s||[]).forEach(s=>{const k=key(s.uid);if(!k)return;want['stories/'+k+'_'+s.id]={u:k,k:s.k,text:s.text||'',cap:s.cap||'',bg:s.bg||0,ts:s.ts,feed:!!s.feed,likes:(s.likes||[]).length,cm:(s.cm||[]).length,th:s.th||''}});
   d.c.forEach(c=>{const ms=c.m.map(key).filter(Boolean);if(!ms.length)return;const n=d.m.filter(m=>m.cid===c.id);
     want['chats/'+c.type+'_'+ms.slice().sort().join('__')]={type:c.type,members:ms,n:n.length,last:n.length?n[n.length-1].ts:0}});
   let prev=[];try{prev=JSON.parse(localStorage.gh7ck||'[]')}catch{}
-  prev.filter(k=>!(k in want)&&!k.startsWith('users/')).forEach(k=>{cput(k,null);delete cSent[k]});
+  prev.filter(k=>!(k in want)&&!k.startsWith('users/')&&!k.startsWith('profiles/')&&!k.startsWith('unames/')).forEach(k=>{cput(k,null);delete cSent[k]});
   try{localStorage.gh7ck=JSON.stringify(Object.keys(want))}catch{}
   for(const k in want){const s=JSON.stringify(want[k]);if(cSent[k]!==s)cput(k,want[k]).then(ok=>{if(ok)cSent[k]=s})}
 }
+const cget=async p=>{if(!DB)return undefined;try{const r=await fetch(`${DB}/${p.split('/').map(encodeURIComponent).join('/')}.json`);if(!r.ok)return undefined;return await r.json()}catch{return undefined}};
+function importUser(cp,rem){if(!cp||!cp.email||!cp.un)return null;D=load();let u=D.u.find(x=>x.email===cp.email);if(u)return u;
+  u={id:D.n++,email:cp.email,un:cp.un,first:cp.first||cp.un,last:cp.last||'',bio:cp.bio||'',g:cp.g||0,photo:cp.photo||null,ts:cp.ts||Date.now()};if(rem)u.rem=true;D.u.push(u);save();return u}
+let fT=0;
+function cloudFind(raw){clearTimeout(fT);const q=String(raw||'').trim().toLowerCase().replace(/^@/,'');if(q.length<3||!DB)return;
+  fT=setTimeout(async()=>{let cp=null;
+    if(EMRE.test(q))cp=await cget('profiles/'+ek(q));
+    else if(UNRE.test(q)){const k=await cget('unames/'+q);if(k&&typeof k==='string')cp=await cget('profiles/'+k)}
+    if(!cp||ui.sheet!=='find')return;const m=me();if(m&&cp.email===m.email)return;
+    D=load();if(D.u.some(x=>x.email===cp.email))return;
+    importUser(cp,true);draw();const i=document.getElementById('fq');if(i){i.focus();const l=i.value.length;try{i.setSelectionRange(l,l)}catch{}}},350)}
 async function checkBan(email){if(!DB)return false;try{const r=await fetch(`${DB}/bans/${encodeURIComponent(ek(email))}.json`);return r.ok&&(await r.json())===true}catch{return false}}
 let banT=0;
 function banPoll(){const u=me();if(!DB||!u||Date.now()-banT<15000)return;banT=Date.now();
@@ -666,7 +677,7 @@ function sheetView(){
   }
   if(s==='new'){t='Новый чат';b=`<button class="row" data-a="saved"><span class="av" style="width:44px;height:44px;background:linear-gradient(135deg,${GR[4]})">${ic('bookmark',22)}</span><div><div class="nm">Избранное</div><div class="sb2">Заметки для себя</div></div></button>${friends().map(x=>`<button class="row" data-a="msgto" data-v="${x.u.id}">${av(x.u,44)}<div><div class="nm">${N(x.u)}</div><div class="sb2">@${esc(x.u.un)}</div></div></button>`).join('')}<button class="sb" data-a="sheet" data-v="find" style="margin-top:6px">Найти нового друга</button>`}
   if(s==='find'){t='Найти друга';const q=ui.fq.trim().toLowerCase().replace(/^@/,'');const res=q.length<2?null:D.u.filter(x=>x.id!==meId()&&(x.un.startsWith(q)||x.email===q)).slice(0,10);
-    b=`<input class="inp" id="fq" data-k="fq" placeholder="@юзернейм или точная почта" value="${esc(ui.fq)}" autocomplete="off"><p class="hint" style="margin:8px 0">Добавить можно только настоящих людей, зарегистрированных в GoodHi.</p>${res&&!res.length?'<p class="hint" style="text-align:center;padding:14px">Никого не нашли. Человек должен быть зарегистрирован.</p>':''}${(res||[]).map(x=>{const r=rel(x.id);return `<div class="req" style="background:var(--soft)"><span data-a="uprof" data-v="${x.id}" style="cursor:pointer">${av(x,44)}</span><div class="grow"><div class="nm">${N(x)}</div><div class="sb2">@${esc(x.un)}</div></div><button class="pill ${r==='friend'||r==='sent'?'ok':''}" ${r==='friend'||r==='sent'?'disabled':''} data-a="add" data-v="${x.id}">${{none:'Добавить',friend:'Уже друзья',sent:'Заявка отправлена',incoming:'Принять'}[r]}</button></div>`}).join('')}`}
+    b=`<input class="inp" id="fq" data-k="fq" placeholder="точный @юзернейм или почта" value="${esc(ui.fq)}" autocomplete="off"><p class="hint" style="margin:8px 0">Добавить можно только настоящих людей, зарегистрированных в GoodHi.</p>${res&&!res.length?'<p class="hint" style="text-align:center;padding:14px">Никого не нашли. Человек должен быть зарегистрирован.</p>':''}${(res||[]).map(x=>{const r=rel(x.id);return `<div class="req" style="background:var(--soft)"><span data-a="uprof" data-v="${x.id}" style="cursor:pointer">${av(x,44)}</span><div class="grow"><div class="nm">${N(x)}</div><div class="sb2">@${esc(x.un)}</div></div><button class="pill ${r==='friend'||r==='sent'?'ok':''}" ${r==='friend'||r==='sent'?'disabled':''} data-a="add" data-v="${x.id}">${{none:'Добавить',friend:'Уже друзья',sent:'Заявка отправлена',incoming:'Принять'}[r]}</button></div>`}).join('')}`}
   if(s==='shop'){t='Магазин';
     const perks=[['smile','Собственные стикеры','Создавайте стикеры из своих картинок'],['palette','Цвет ника','Ваше имя заметно в каждом чате'],['image','Баннер в профиль','Картинка или переливающийся градиент'],['sparkles','Новые плюшки','Скоро, дальше дополним']];
     b=`<div class="plus-hero"><div class="crown">${ic('crown',34)}</div><h3>Good Plus</h3><p>Больше свободы в GoodHi</p><div class="price">${u.plus?'Подписка активна':plusPrice()}</div></div><div style="margin:12px 0 6px">${perks.map(([i,h,d],k)=>`<div class="perk ${k===3?'soon':''}"><span class="pi">${ic(i,22)}</span><div><b>${h}</b><small>${d}</small></div></div>`).join('')}</div>${plusActions(u)}`}
@@ -746,18 +757,24 @@ function checkCode(v){
   if(!c||c.att>=5){A.err='Код устарел или слишком много попыток. Запросите новый.';A.step='code';return draw()}
   if(c.code!==v){c.att++;save();A.err='Неверный код. Проверьте письмо и попробуйте ещё раз.';draw();return}
   A.code=v;A.err='';$('#toast').innerHTML='';
-  const u=D.u.find(u=>u.email===em);
-  checkBan(em).then(b=>{
+  const u0=D.u.find(u=>u.email===em);
+  Promise.all([checkBan(em),(u0&&!u0.rem)?null:cget('profiles/'+ek(em))]).then(([b,cp])=>{
     if(b){A.step='email';A.err='Этот аккаунт заблокирован администратором.';A.fx=true;draw();return}
-    D=load();
-    if(u){delete D.codes[em];save();login(u.id)}else{A.step='profile';A.fx=true;draw()}
+    D=load();let u=D.u.find(u=>u.email===em);
+    if(u&&u.rem){if(cp&&cp.un){Object.assign(u,{un:cp.un,first:cp.first||u.first,last:cp.last||'',bio:cp.bio||'',g:cp.g||0,photo:cp.photo||null});}delete u.rem;save()}
+    else if(!u&&cp&&cp.un)u=importUser(cp,false);
+    if(u){D=load();delete D.codes[em];save();login(u.id)}else{A.step='profile';A.fx=true;draw()}
   });
 }
 function register(){
   const p=A.p,un=p.un.trim().toLowerCase().replace(/^@/,'');D=load();
   if(!p.first.trim()){A.err='Укажите имя.';return draw()}
   if(!UNRE.test(un)){A.err='Юзернейм: 3–20 символов, латиница, цифры и _.';return draw()}
-  if(D.u.some(u=>u.un===un)){A.err='Этот юзернейм уже занят — выберите другой.';return draw()}
+  if(D.u.some(u=>u.un===un&&u.email!==A.email)){A.err='Этот юзернейм уже занят — выберите другой.';return draw()}
+  if(A.busy)return;A.busy=true;
+  cget('unames/'+un).then(k=>{A.busy=false;if(typeof k==='string'&&k!==ek(A.email)){A.err='Этот юзернейм уже занят — выберите другой.';return draw()}doRegister(p,un)});
+}
+function doRegister(p,un){D=load();
   const u={id:D.n++,email:A.email,un,first:p.first.trim(),last:p.last.trim(),bio:'',g:p.g,photo:p.photo,ts:Date.now()};
   D.u.push(u);delete D.codes[A.email];save();login(u.id);
 }
@@ -863,7 +880,7 @@ document.addEventListener('input',e=>{
   const t=e.target;
   if(t.dataset.k==='email')A.email=t.value;
   else if(t.dataset.k==='q'){ui.q=t.value;draw()}
-  else if(t.dataset.k==='fq'){ui.fq=t.value;draw()}
+  else if(t.dataset.k==='fq'){ui.fq=t.value;draw();cloudFind(t.value)}
   else if(t.dataset.p){A.p[t.dataset.p]=t.dataset.p==='un'?t.value.toLowerCase().replace(/[^a-z0-9_]/g,''):t.value;if(t.dataset.p==='un')t.value=A.p.un}
   else if(t.dataset.th){const k=t.dataset.th;if(k==='in')ui.thin=t.value;else{cfg.th=cfg.th||{};if(k==='n')cfg.th.n=t.value.slice(0,24);else cfg.th[k]=t.value.toLowerCase();saveCfg();applyCfg();const c=$('#thcode');if(c)c.value=themeCode(cfg.th)}}
   else if(t.dataset.y){ui.pay[t.dataset.y]=t.value}

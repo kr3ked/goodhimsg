@@ -2,18 +2,23 @@
   "rules": {
     ".read": false,
     ".write": false,
-
     "users": {
       ".read": "auth != null && auth.token.email === 'ADMIN@EXAMPLE.COM'",
-      "$k": { ".write": true }
+      "$k": {
+        ".write": true
+      }
     },
     "stories": {
       ".read": "auth != null && auth.token.email === 'ADMIN@EXAMPLE.COM'",
-      "$k": { ".write": true }
+      "$k": {
+        ".write": true
+      }
     },
     "chats": {
       ".read": "auth != null && auth.token.email === 'ADMIN@EXAMPLE.COM'",
-      "$k": { ".write": true }
+      "$k": {
+        ".write": true
+      }
     },
     "reports": {
       ".read": "auth != null && auth.token.email === 'ADMIN@EXAMPLE.COM'",
@@ -37,7 +42,9 @@
     "devices": {
       "$e": {
         ".read": true,
-        "$d": { ".write": true }
+        "$d": {
+          ".write": true
+        }
       }
     },
     "bans": {
@@ -45,6 +52,18 @@
       "$k": {
         ".read": true,
         ".write": "auth != null && auth.token.email === 'ADMIN@EXAMPLE.COM'"
+      }
+    },
+    "profiles": {
+      "$k": {
+        ".read": true,
+        ".write": true
+      }
+    },
+    "unames": {
+      "$u": {
+        ".read": true,
+        ".write": "!data.exists() || data.val() === newData.val()"
       }
     }
   }
