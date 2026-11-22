@@ -1,0 +1,41 @@
+plugins {
+    id 'com.android.application'
+}
+
+android {
+    namespace 'app.goodhi.messenger'
+    compileSdk 34
+
+    defaultConfig {
+        applicationId 'app.goodhi.messenger'
+        minSdk 26
+        targetSdk 34
+        versionCode 1
+        versionName '1.0'
+
+        // Что открывает приложение.
+        // По умолчанию: сам мессенджер из assets/index.html (работает без сервера, данные хранятся на телефоне).
+        // Чтобы приложение работало с вашим сервером (настоящие друзья на разных телефонах),
+        // замените адрес на свой https-сайт, например: "https://goodhi.example.com"
+        buildConfigField 'String', 'START_URL', '"https://appassets.androidplatform.net/assets/index.html"'
+    }
+
+    buildFeatures {
+        buildConfig true
+    }
+
+    compileOptions {
+        sourceCompatibility JavaVersion.VERSION_17
+        targetCompatibility JavaVersion.VERSION_17
+    }
+
+    buildTypes {
+        release {
+            minifyEnabled false
+        }
+    }
+}
+
+dependencies {
+    implementation 'androidx.webkit:webkit:1.11.0'
+}
