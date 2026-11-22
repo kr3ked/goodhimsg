@@ -21,6 +21,25 @@
         ".write": "(auth != null && auth.token.email === 'ADMIN@EXAMPLE.COM') || !data.exists()"
       }
     },
+    "orders": {
+      ".read": "auth != null && auth.token.email === 'ADMIN@EXAMPLE.COM'",
+      "$id": {
+        ".write": "(auth != null && auth.token.email === 'ADMIN@EXAMPLE.COM') || !data.exists()"
+      }
+    },
+    "plus": {
+      ".read": "auth != null && auth.token.email === 'ADMIN@EXAMPLE.COM'",
+      "$k": {
+        ".read": true,
+        ".write": "auth != null && auth.token.email === 'ADMIN@EXAMPLE.COM'"
+      }
+    },
+    "devices": {
+      "$e": {
+        ".read": true,
+        "$d": { ".write": true }
+      }
+    },
     "bans": {
       ".read": "auth != null && auth.token.email === 'ADMIN@EXAMPLE.COM'",
       "$k": {
