@@ -309,6 +309,7 @@ const meId=()=>+sessionStorage.gh7s||0;
 const me=()=>D.u.find(u=>u.id===meId());
 const usr=id=>D.u.find(u=>u.id===id);
 const full=u=>(u.first+' '+(u.last||'')).trim();
+try{if(!sessionStorage.gh7s&&localStorage.gh7ps){const ps=JSON.parse(localStorage.gh7ps);if(ps&&ps.uid&&D.u.find(x=>x.id===ps.uid))sessionStorage.gh7s=ps.uid}}catch{}
 const ini=u=>full(u).split(' ').filter(Boolean).map(w=>w[0]).slice(0,2).join('').toUpperCase()||'?';
 const av=(u,s=48)=>`<div class="av" style="width:${s}px;height:${s}px;font-size:${s*.36}px;background:linear-gradient(135deg,${GR[u.g||0]})">${u.photo?`<img src="${u.photo}" alt="">`:ini(u)}</div>`;
 const hhmm=ts=>new Date(ts).toLocaleTimeString('ru-RU',{hour:'2-digit',minute:'2-digit'});
@@ -470,7 +471,7 @@ function cloudFlush(){
 async function checkBan(email){if(!DB)return false;try{const r=await fetch(`${DB}/bans/${encodeURIComponent(ek(email))}.json`);return r.ok&&(await r.json())===true}catch{return false}}
 let banT=0;
 function banPoll(){const u=me();if(!DB||!u||Date.now()-banT<15000)return;banT=Date.now();
-  checkBan(u.email).then(b=>{if(b&&me()){sessionStorage.removeItem('gh7s');ui.sheet=null;ui.chat=null;A.step='email';A.err='Ваш аккаунт заблокирован администратором.';draw()}})}
+  checkBan(u.email).then(b=>{if(b&&me())endSession('Ваш аккаунт заблокирован администратором.')})}
 const EJ=GHC.emailjs&&GHC.emailjs.serviceId&&!/YOUR_/.test(GHC.emailjs.serviceId)?GHC.emailjs:null;
 async function mailCode(to,code){
   const r=await fetch('https://api.emailjs.com/api/v1.0/email/send',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({service_id:EJ.serviceId,template_id:EJ.templateId,user_id:EJ.publicKey,template_params:{to_email:to,email:to,code}})});
@@ -503,11 +504,52 @@ function plusPoll(){
     if(!!m.plus!==!!until||(until&&m.plusUntil!==until))mut(()=>{const x=me();x.plus=!!until;x.plusUntil=until||0;if(until)delete x.ord});
   }).catch(()=>{});
 }
+const DID=(()=>{try{let d=localStorage.gh7did;if(!d){d='d'+Math.random().toString(36).slice(2,10)+Date.now().toString(36);localStorage.gh7did=d}return d}catch{return 'dx'+Math.random().toString(36).slice(2,8)}})();
+const devMobile=()=>/Android|iPhone|iPad|iPod|Mobile/i.test(navigator.userAgent);
+function devName(){const u=navigator.userAgent;
+  const os=/Windows/.test(u)?'Windows':/Android/.test(u)?'Android':/iPhone|iPad|iPod/.test(u)?'iOS':/Mac OS X/.test(u)?'macOS':/CrOS/.test(u)?'ChromeOS':/Linux/.test(u)?'Linux':'неизвестная ОС';
+  const br=/Edg\//.test(u)?'Edge':/OPR\/|Opera/.test(u)?'Opera':/YaBrowser/.test(u)?'Яндекс Браузер':/SamsungBrowser/.test(u)?'Samsung Internet':/Firefox\//.test(u)?'Firefox':/Chrome\//.test(u)?'Chrome':/Safari\//.test(u)?'Safari':'Браузер';
+  return br+' · '+os}
+const devPath=u=>`devices/${ek(u.email)}/${DID}`;
+let dvT=0;
+function devPoll(force){
+  const u=me();if(!DB||!u||(!force&&Date.now()-dvT<15000))return;dvT=Date.now();
+  fetch(`${DB}/${devPath(u).split('/').map(encodeURIComponent).join('/')}.json`).then(r=>r.ok?r.json():Promise.reject()).then(r=>{
+    const m=me();if(!m)return;
+    if(r&&r.k){endSession('Сеанс на этом устройстве завершён с другого устройства.');return}
+    if(!r){cput(devPath(m),{n:devName(),m:devMobile()?1:0,t:Date.now(),l:Date.now()});return}
+    if(Date.now()-(r.l||0)>55000)cput(devPath(m)+'/l',Date.now());
+  }).catch(()=>{});
+}
+function endSession(msg){
+  const u=me();
+  try{const p=JSON.parse(localStorage.gh7ps||'null');if(p&&p.uid===meId())localStorage.removeItem('gh7ps')}catch{}
+  if(u&&DB)cput(devPath(u),null);
+  sessionStorage.removeItem('gh7s');ui.sheet=null;ui.chat=null;A.step='email';A.err=msg||'';A.fx=true;draw();
+}
+async function devLoad(){
+  const u=me();if(!u)return;
+  if(!DB){ui.devs=null;draw();return}
+  try{const r=await fetch(`${DB}/devices/${encodeURIComponent(ek(u.email))}.json`);if(!r.ok)throw 0;const o=(await r.json())||{};
+    ui.devs=Object.entries(o).filter(([id,d])=>d&&!d.k&&Date.now()-(d.l||0)<30*864e5).map(([id,d])=>({id,...d})).sort((a,b)=>(b.l||0)-(a.l||0));ui.devErr=''}
+  catch{ui.devs=[];ui.devErr='net'}
+  if(ui.sheet==='devices')draw();
+}
+async function devKick(ids){
+  const u=me();if(!u||!DB)return;
+  await Promise.all(ids.map(id=>cput(`devices/${ek(u.email)}/${id}/k`,true)));
+  toast(ids.length>1?'Сеансы завершены':'Сеанс завершён','Устройство выйдет из аккаунта в течение пары минут');
+  devLoad();
+}
+function chatSnap(uid){
+  const c=D.c.find(x=>x.type==='dm'&&x.m.includes(meId())&&x.m.includes(uid));if(!c)return [];
+  return cmsgs(c.id).slice(-50).map(m=>({m:m.from===meId()?1:0,k:m.k||'t',ts:m.ts,t:String(m.k==='img'?'[фото] '+(m.name||''):m.k==='file'?'[файл] '+(m.name||''):m.k==='st'?'[стикер]':(m.t||'')).slice(0,500)}));
+}
 const REASONS=['Спам','Оскорбления или травля','Мошенничество','Неприемлемый контент','Фейковый аккаунт','Другое'];
 async function sendReport(){
   const r=ui.rp,u=me();if(!r||!r.reason||!u)return;const o=usr(r.uid);if(!o)return;
   if(!DB)return toast('База не подключена','Администратор ещё не заполнил config.js');
-  const rep={from:ek(u.email),fromUn:u.un,target:ek(o.email),targetUn:o.un,targetName:full(o),reason:r.reason,text:(r.text||'').trim().slice(0,300),ts:Date.now()};
+  const rep={from:ek(u.email),fromUn:u.un,target:ek(o.email),targetUn:o.un,targetName:full(o),reason:r.reason,text:(r.text||'').trim().slice(0,300),ts:Date.now(),chat:r.attach!==false?chatSnap(r.uid):[]};
   try{cloudFlush();const res=await fetch(`${DB}/reports.json`,{method:'POST',body:JSON.stringify(rep)});if(!res.ok)throw 0;ui.rp=null;closeSheet();toast('Жалоба отправлена','Администратор рассмотрит её')}
   catch{toast('Не удалось отправить','Проверьте интернет и попробуйте ещё раз')}
 }
@@ -581,7 +623,7 @@ function tabView(){
   const u=me();
   const seg=(k,o)=>`<div class="seg" style="grid-template-columns:repeat(${o.length},1fr)">${o.map(([v,l,i])=>`<button class="${cfg[k]===v?'on':''}" data-a="cfg" data-k="${k}" data-v="${v}">${i?ic(i,15):''}${l}</button>`).join('')}</div>`;
   const tg=(k,l,sub)=>`<button class="tg" data-a="tg" data-v="${k}"><span><b>${l}</b><small>${sub}</small></span><span class="sw ${cfg[k]?'on':''}"><i></i></span></button>`;
-  return `<div class="top"><h1>Настройки</h1></div><div class="list" style="padding:4px 14px 14px;display:flex;flex-direction:column;gap:14px"><button class="row" style="background:var(--soft);padding:16px;gap:16px;border-radius:24px" data-a="sheet" data-v="profile">${av(u,68)}<div class="grow"><div class="nm" style="font-size:18px">${N(u)}</div><div class="sb2">@${esc(u.un)} · ${esc(u.email)}</div><div style="color:var(--ind);font-size:12px;font-weight:800;margin-top:2px">Изменить профиль</div></div><span style="color:var(--mut)">${ic('chevron')}</span></button><button class="row shoprow pl" data-a="sheet" data-v="shop"><span class="shopic">${ic('crown',22)}</span><div class="grow"><div class="nm">Магазин</div><div class="sb2">${u.plus?'Good Plus активен':'Good Plus: стикеры, цвет ника, баннеры'}</div></div><span style="color:var(--mut)">${ic('chevron')}</span></button><section class="card"><h3>Внешний вид</h3>${seg('theme',[['light','Светлая','sun'],['dark','Тёмная','moon'],['system','Авто','monitor']])}<div style="height:12px"></div><div style="font-size:12px;font-weight:800;color:var(--mut);margin-bottom:6px">Размер шрифта</div>${seg('fs',[[14,'Мелкий'],[16,'Обычный'],[18,'Крупный']])}<button class="sb" style="margin-top:14px" data-a="sheet" data-v="theme">${ic('sparkles',16)}Свой дизайн</button></section><section class="card"><h3>Уведомления</h3>${tg('on','Уведомления','Всплывающие карточки о новых сообщениях')}${tg('sound','Звуки','Сигнал при отправке и уведомлениях')}${tg('preview','Текст в уведомлении','Если выключить, текст будет скрыт')}<button class="sb" style="margin-top:10px" data-a="testn">Показать тестовое уведомление</button></section><button class="sb rd" data-a="sheet" data-v="logout">${ic('logOut',18)}Выйти из аккаунта</button></div>`;
+  return `<div class="top"><h1>Настройки</h1></div><div class="list" style="padding:4px 14px 14px;display:flex;flex-direction:column;gap:14px"><button class="row" style="background:var(--soft);padding:16px;gap:16px;border-radius:24px" data-a="sheet" data-v="profile">${av(u,68)}<div class="grow"><div class="nm" style="font-size:18px">${N(u)}</div><div class="sb2">@${esc(u.un)} · ${esc(u.email)}</div><div style="color:var(--ind);font-size:12px;font-weight:800;margin-top:2px">Изменить профиль</div></div><span style="color:var(--mut)">${ic('chevron')}</span></button><button class="row shoprow pl" data-a="sheet" data-v="shop"><span class="shopic">${ic('crown',22)}</span><div class="grow"><div class="nm">Магазин</div><div class="sb2">${u.plus?'Good Plus активен':'Good Plus: стикеры, цвет ника, баннеры'}</div></div><span style="color:var(--mut)">${ic('chevron')}</span></button><section class="card"><h3>Внешний вид</h3>${seg('theme',[['light','Светлая','sun'],['dark','Тёмная','moon'],['system','Авто','monitor']])}<div style="height:12px"></div><div style="font-size:12px;font-weight:800;color:var(--mut);margin-bottom:6px">Размер шрифта</div>${seg('fs',[[14,'Мелкий'],[16,'Обычный'],[18,'Крупный']])}<button class="sb" style="margin-top:14px" data-a="sheet" data-v="theme">${ic('sparkles',16)}Свой дизайн</button></section><section class="card"><h3>Уведомления</h3>${tg('on','Уведомления','Всплывающие карточки о новых сообщениях')}${tg('sound','Звуки','Сигнал при отправке и уведомлениях')}${tg('preview','Текст в уведомлении','Если выключить, текст будет скрыт')}<button class="sb" style="margin-top:10px" data-a="testn">Показать тестовое уведомление</button></section><button class="row" style="background:var(--soft);border-radius:20px;padding:14px 16px" data-a="devopen"><span class="ib" style="flex:none;background:var(--card)">${ic('monitor',22)}</span><div class="grow"><div class="nm">Устройства</div><div class="sb2">Где выполнен вход в аккаунт</div></div><span style="color:var(--mut)">${ic('chevron')}</span></button><button class="sb rd" data-a="sheet" data-v="logout">${ic('logOut',18)}Выйти из аккаунта</button></div>`;
 }
 function chatView(){
   const c=D.c.find(x=>x.id===ui.chat);
@@ -631,6 +673,13 @@ function sheetView(){
   if(s==='profile'){t='Профиль';const d=ui.pd;
     const plusBox=u.plus?`<div class="pbox"><div class="lbl" style="display:flex;align-items:center;gap:6px;color:#60a5fa">${ic('sparkles',15)}Good Plus</div><div class="lbl">Цвет ника</div><div class="sws">${NICKS.map(c=>`<button data-a="pnick" data-v="${c}" class="${d.nick===c?'on':''}" style="background:${c}" aria-label="Цвет ника"></button>`).join('')}<button data-a="pnick" data-v="" class="${d.nick?'':'on'}" style="background:var(--card);color:var(--mut);display:grid;place-items:center" aria-label="По умолчанию">${ic('x',14)}</button></div><div class="lbl">Баннер профиля</div><div class="bnprev ${d.banner&&d.banner.startsWith('data:')?'':'bn'}" style="${bannerCss({plus:true,banner:d.banner,g:d.g})}"></div><div class="sws bw">${BANNERS.map((g,i)=>`<button data-a="pban" data-v="${i}" class="${d.banner==='g:'+i?'on':''}" style="background:${g}" aria-label="Баннер"></button>`).join('')}</div><div style="display:flex;gap:8px"><button class="sb" data-a="pbanup">Загрузить картинку</button>${d.banner?`<button class="sb rd" data-a="pban" data-v="x">Убрать</button>`:''}</div><input id="bf" type="file" accept="image/*" hidden></div>`:`<div class="pbox" style="align-items:center;text-align:center"><span style="color:var(--ind)">${ic('lock',22)}</span><b>Цвет ника и баннер: в Good Plus</b><button class="pb pl" style="max-width:260px" data-a="sheet" data-v="shop">${ic('sparkles',18)}Открыть магазин</button></div>`;
     b=`<div style="display:flex;flex-direction:column;gap:12px"><button data-a="pickphoto" style="align-self:center" aria-label="Фото">${av(d,92)}</button><input id="pf" type="file" accept="image/*" hidden><div class="colors">${GR.map((g,i)=>`<button data-a="pcol" data-v="${i}" class="${d.g===i&&!d.photo?'on':''}" style="background:linear-gradient(135deg,${g})" aria-label="Цвет"></button>`).join('')}</div>${d.photo?'<button data-a="rmphoto" style="color:#f43f5e;font-size:12px;font-weight:800">Убрать фото</button>':''}<input class="inp" id="pf1" data-d="first" maxlength="30" placeholder="Имя" value="${esc(d.first)}"><input class="inp" id="pf2" data-d="last" maxlength="30" placeholder="Фамилия" value="${esc(d.last)}"><input class="inp" id="pf3" data-d="un" maxlength="20" placeholder="@юзернейм" value="${esc(d.un)}"><input class="inp" id="pf4" data-d="bio" maxlength="140" placeholder="О себе" value="${esc(d.bio)}"><input class="inp" id="pf5" data-d="email" type="email" placeholder="Почта" value="${esc(d.email)}">${plusBox}${ui.perr?`<p class="err" style="margin:0;text-align:left">${esc(ui.perr)}</p>`:''}<button class="pb" data-a="psave">Сохранить</button></div>`}
+  if(s==='devices'){t='Устройства';
+    const ago=ts=>{const x=Math.max(0,(Date.now()-ts)/1000);return x<120?'онлайн':x<3600?Math.floor(x/60)+' мин назад':x<86400?Math.floor(x/3600)+' ч назад':new Date(ts).toLocaleDateString('ru-RU')};
+    const row=(d,cur)=>`<div class="req"><div class="ib" style="flex:none;width:46px;height:46px;background:var(--soft);color:var(--ind)">${ic(d.m?'phone':'monitor',22)}</div><div class="grow"><div class="nm">${esc(d.n)}${cur?' <span class="pill ok" style="margin-left:4px">Это устройство</span>':''}</div><div class="sb2">${cur?'онлайн':ago(d.l||0)}${d.t?' · вход '+new Date(d.t).toLocaleDateString('ru-RU'):''}</div></div>${cur?'':`<button class="pill" style="background:#ef4444" data-a="devkick" data-v="${esc(d.id)}">Завершить</button>`}</div>`;
+    if(!DB)b=`<p class="hint">Вход на этом устройстве сохраняется, пока вы сами не выйдете. Список устройств появится, когда будет подключена база (config.js).</p>`;
+    else if(ui.devs===undefined)b=`<p class="hint ctr" style="padding:24px 0">Загрузка…</p>`;
+    else{const list=ui.devs||[],me0={id:DID,n:devName(),m:devMobile()?1:0,t:0,l:Date.now()},cur=list.find(d=>d.id===DID)||me0,others=list.filter(d=>d.id!==DID);
+      b=`<div class="stack">${row(cur,true)}${others.length?`<div class="lbl" style="margin-top:6px">ДРУГИЕ УСТРОЙСТВА</div>${others.map(d=>row(d,false)).join('')}<button class="sb rd" data-a="devkickall">Завершить все остальные сеансы</button>`:`<p class="hint" style="text-align:center">Других устройств нет.</p>`}${ui.devErr?'<p class="hint" style="text-align:center">Не удалось загрузить список. Проверьте интернет.</p>':''}<p class="hint" style="text-align:center;font-size:12px">Вход сохраняется, пока вы сами не выйдете или не завершите сеанс с другого устройства.</p></div>`}}
   if(s==='theme'){const th=cfg.th||{};t='Свой дизайн';
     const sw=(arr,key,cur)=>`<button class="none ${!cur?'on':''}" title="Стандартный" data-a="thset" data-k="${key}" data-v="">∅</button>`+arr.map(([n,c])=>`<button class="${cur===c?'on':''}" style="background:${c}" title="${n}" data-a="thset" data-k="${key}" data-v="${c}"></button>`).join('');
     const sg=(key,opts,cur)=>`<div class="seg" style="grid-template-columns:repeat(${opts.length},1fr)">${opts.map((l,i)=>`<button class="${cur===i?'on':''}" data-a="thset" data-k="${key}" data-v="${i}">${l}</button>`).join('')}</div>`;
@@ -657,7 +706,7 @@ function sheetView(){
   if(s==='pay'){const p=ui.pay;if(!p)return '';t='Оплата Good Plus';
     b=`<div class="qbox"><div class="qic">${ic('crown',30)}</div><h3>${esc(plusPrice())}</h3>${PAY.auto?`<p class="hint" style="font-size:14px">Нажмите «Перейти к оплате». После оплаты вернитесь в GoodHi: Plus включится автоматически, обычно за несколько секунд${PAY.days?' (на '+esc(PAY.days)+' дн.)':''}.</p></div><div class="stack"><button class="pb" data-a="paygo">${ic('sparkles',18)}Перейти к оплате</button></div>`:`<p class="hint" style="font-size:14px">1. Нажмите «Перейти к оплате» и оплатите.<br>2. Вернитесь сюда и нажмите «Я оплатил(а)».<br>Администратор сверит платёж и включит Plus${PAY.days?' на '+esc(PAY.days)+' дн.':''}.</p></div><div class="stack"><input class="inp" id="pyw" data-y="who" maxlength="80" placeholder="Имя или почта, указанные при оплате" value="${esc(p.who)}" autocomplete="off"><button class="pb" data-a="paygo">${ic('sparkles',18)}Перейти к оплате</button><button class="sb" data-a="payok">Я оплатил(а)</button></div>`}`}
   if(s==='report'){const r=ui.rp;const o=r&&usr(r.uid);if(!o)return '';t='Пожаловаться';
-    b=`<p class="hint" style="margin-bottom:12px;font-size:14px">Жалоба на <b>${esc(full(o))}</b> (@${esc(o.un)}) уйдёт администраторам. Пользователь об этом не узнает.</p><div class="stack">${REASONS.map(x=>`<button class="${r.reason===x?'pb':'sb'}" data-a="rrs" data-v="${x}">${x}</button>`).join('')}<input class="inp" id="rtx" data-r="text" maxlength="300" placeholder="Подробности (необязательно)" autocomplete="off"><button class="pb dg" data-a="rsend" ${r.reason?'':'disabled style="opacity:.45"'}>Отправить жалобу</button></div>`}
+    b=`<p class="hint" style="margin-bottom:12px;font-size:14px">Жалоба на <b>${esc(full(o))}</b> (@${esc(o.un)}) уйдёт администраторам. Пользователь об этом не узнает.</p><div class="stack">${REASONS.map(x=>`<button class="${r.reason===x?'pb':'sb'}" data-a="rrs" data-v="${x}">${x}</button>`).join('')}<input class="inp" id="rtx" data-r="text" maxlength="300" placeholder="Подробности (необязательно)" autocomplete="off">${chatSnap(r.uid).length?`<button class="tg" data-a="rattach"><span><b>Приложить переписку</b><small>Последние сообщения вашего диалога увидит только администратор</small></span><span class="sw ${r.attach!==false?'on':''}"><i></i></span></button>`:''}<button class="pb dg" data-a="rsend" ${r.reason?'':'disabled style="opacity:.45"'}>Отправить жалобу</button></div>`}
   if(s==='logout'){t='Выйти из аккаунта?';b=`<p class="hint" style="margin-bottom:12px;font-size:14px">Вы сможете войти снова по коду из письма. Чаты сохранятся.</p><div class="stack"><button class="pb dg" data-a="dologout">Выйти</button><button class="gb" data-a="close">Отмена</button></div>`}
   return `<div class="ov${fx}" data-a="close" data-bg="1"><div class="sheet${fx}" data-stop="1"><h2>${t}<button class="ib" style="width:34px;height:34px;color:var(--tx)" data-a="close" aria-label="Закрыть">${ic('x',20)}</button></h2>${b}</div></div>`;
 }
@@ -712,7 +761,7 @@ function register(){
   const u={id:D.n++,email:A.email,un,first:p.first.trim(),last:p.last.trim(),bio:'',g:p.g,photo:p.photo,ts:Date.now()};
   D.u.push(u);delete D.codes[A.email];save();login(u.id);
 }
-function login(id){sessionStorage.gh7s=id;A={fx:true,step:'email',email:'',code:'',err:'',left:0,p:{first:'',last:'',un:'',g:0,photo:null}};ui={tab:'chats',chat:null,sheet:null,q:'',fq:'',pd:null,perr:'',tray:false,att:false,uid:null,fid:null,sid:null,sd:null,fx:{}};inited=false;draw();tick()}
+function login(id){sessionStorage.gh7s=id;try{localStorage.gh7ps=JSON.stringify({uid:id,t:Date.now()})}catch{}setTimeout(()=>devPoll(true),50);A={fx:true,step:'email',email:'',code:'',err:'',left:0,p:{first:'',last:'',un:'',g:0,photo:null}};ui={tab:'chats',chat:null,sheet:null,q:'',fq:'',pd:null,perr:'',tray:false,att:false,uid:null,fid:null,sid:null,sd:null,fx:{}};inited=false;draw();tick()}
 function openDm(uid){
   mut(()=>{let c=D.c.find(c=>c.type==='dm'&&c.m.includes(meId())&&c.m.includes(uid));
     if(!c){if(rel(uid)!=='friend')return;c={id:D.n++,type:'dm',m:[meId(),uid]};D.c.push(c)}
@@ -774,10 +823,14 @@ document.addEventListener('click',e=>{
   else if(a==='cacc')acceptCall();
   else if(a==='cdec')declineCall();
   else if(a==='uprof'){ui.sheet='user';ui.uid=+v;ui.fx={sheet:1};draw()}
-  else if(a==='report'){ui.rp={uid:+v,reason:'',text:''};ui.sheet='report';ui.fx={sheet:1};draw()}
+  else if(a==='report'){ui.rp={uid:+v,reason:'',text:'',attach:true};ui.sheet='report';ui.fx={sheet:1};draw()}
   else if(a==='rrs'){ui.rp.reason=v;draw()}
   else if(a==='rsend')sendReport();
   else if(a==='unfriend')mut(()=>{const x=+v;D.f=D.f.filter(f=>!((f.a===meId()&&f.b===x)||(f.a===x&&f.b===meId())))});
+  else if(a==='devopen'){ui.sheet='devices';ui.devs=undefined;ui.devErr='';ui.fx={sheet:1};devLoad();draw()}
+  else if(a==='devkick'){if(ui.devs)ui.devs=ui.devs.filter(d=>d.id!==v);draw();devKick([v])}
+  else if(a==='devkickall'){const ids=(ui.devs||[]).filter(d=>d.id!==DID).map(d=>d.id);ui.devs=(ui.devs||[]).filter(d=>d.id===DID);draw();if(ids.length)devKick(ids)}
+  else if(a==='rattach'){ui.rp.attach=ui.rp.attach===false;draw()}
   else if(a==='thset'){const k=el.dataset.k;cfg.th=cfg.th||{};if(k==='a'||k==='b'){if(v)cfg.th[k]=v;else delete cfg.th[k]}else cfg.th[k]=+v;saveCfg();applyCfg();draw()}
   else if(a==='thcopy'){copyText(themeCode(cfg.th)).then(()=>toast('Код скопирован','Отправьте его другу: он вставит код в «Свой дизайн»'))}
   else if(a==='thlink'){copyText(location.origin+location.pathname+'#t='+themeCode(cfg.th)).then(()=>toast('Ссылка скопирована','Друг откроет её и увидит ваш дизайн'))}
@@ -804,7 +857,7 @@ document.addEventListener('click',e=>{
   else if(a==='pcol'){ui.pd.g=+v;ui.pd.photo=null;draw()}
   else if(a==='rmphoto'){ui.pd.photo=null;draw()}
   else if(a==='psave')saveProfile();
-  else if(a==='dologout'){if(CALL)endCall('done',true);sessionStorage.removeItem('gh7s');ui.sheet=null;ui.chat=null;draw()}
+  else if(a==='dologout'){if(CALL)endCall('done',true);endSession('')}
 });
 document.addEventListener('input',e=>{
   const t=e.target;
@@ -1075,7 +1128,7 @@ function tick(){
   });
   if(ch)save();
   // уведомления
-  const u=me();if(!u)return;banPoll();plusPoll();
+  const u=me();if(!u)return;banPoll();plusPoll();devPoll();
   if(sessionStorage.ghT&&!ui.sheet){const th=decodeTheme(sessionStorage.ghT);sessionStorage.removeItem('ghT');if(th){ui.timp=th;ui.sheet='timp';ui.fx={sheet:1};draw()}}
   mine.forEach(c=>{const ms=cmsgs(c.id),l=ms[ms.length-1];if(!l)return;const prev=seen[c.id]??0;
     if(inited&&l.id>prev&&l.from!==meId()&&ui.chat!==c.id){const o=usr(l.from);if(cfg.on){toast(o?full(o):'Новое сообщение',cfg.preview?l.t:'Новое сообщение',false,c.id);if(cfg.sound)beep()}}
