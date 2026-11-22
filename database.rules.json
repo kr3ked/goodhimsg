@@ -22,7 +22,6 @@
       }
     },
     "bans": {
-      ".read": "auth != null && auth.token.email === 'ADMIN@EXAMPLE.COM'",
       "$k": {
         ".read": true,
         ".write": "auth != null && auth.token.email === 'ADMIN@EXAMPLE.COM'"
