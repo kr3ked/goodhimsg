@@ -492,6 +492,8 @@ const pk=(x,y)=>[x,y].sort().join('__');
 const enc=encodeURIComponent,cpath=p=>p.split('/').map(enc).join('/');
 const cpatch=(p,v)=>fetch(`${DB}/${cpath(p)}.json`,{method:'PATCH',body:JSON.stringify(v)}).then(r=>r.ok).catch(()=>false);
 const cgetq=async(p,qs)=>{try{const r=await fetch(`${DB}/${cpath(p)}.json?${qs}`);return r.ok?await r.json():undefined}catch{return undefined}};
+const hash7=t=>{let h=2166136261;for(let i=0;i<t.length;i++){h^=t.charCodeAt(i);h=Math.imul(h,16777619)}return (h>>>0).toString(36).padStart(7,'0')};
+const detGid=(ts,fk,t)=>(+ts||0).toString(36).padStart(9,'0')+'-'+hash7(fk+'|'+t);
 const newGid=ts=>(+ts||Date.now()).toString(36).padStart(9,'0')+'-'+Math.random().toString(36).slice(2,7);
 async function relPut(a,b,v){const r=await Promise.all([cpatch(`rel/${a}/${b}`,v),cpatch(`rel/${b}/${a}`,v)]);if(r.every(Boolean)){FS[pk(a,b)]=1;lsSet('gh7fs',FS)}}
 function relUp(uid,st){if(!DB)return;const m=me(),o=usr(uid);if(!m||!o)return;const a=ek(m.email),b=ek(o.email);RB[pk(a,b)]=Date.now();
@@ -524,10 +526,10 @@ async function syncMsgs(rows){
   // 1) своим новым сообщениям даём id и отправляем
   D=load();let dirty=false;const out=[];
   for(const k of friendsK){const ou=peerOf(k);if(!ou)continue;const c=dmOf(ou);if(!c)continue;
-    D.m.forEach(m=>{if(m.cid===c.id&&m.from===meId()&&!m.k&&!m.syn&&typeof m.t==='string'){if(!m.gid){m.gid=newGid(m.ts);dirty=true}out.push({k,gid:m.gid,t:m.t,ts:m.ts})}})}
+    D.m.forEach(m=>{if(m.cid===c.id&&(m.from===meId()||m.from===ou.id)&&!m.k&&!m.syn&&typeof m.t==='string'){const fk=m.from===meId()?a:k;if(!m.gid){m.gid=detGid(m.ts,fk,m.t);dirty=true}out.push({k,gid:m.gid,t:m.t,ts:m.ts,f:fk})}})}
   if(dirty)save();
   const sentTo=new Set();
-  for(const o of out){const ck=pk(a,o.k);let ok=await cput(`dm/${ck}/${o.gid}`,{f:a,t:o.t,ts:o.ts});
+  for(const o of out){const ck=pk(a,o.k);let ok=await cput(`dm/${ck}/${o.gid}`,{f:o.f,t:o.t,ts:o.ts});
     if(!ok&&(await cget(`dm/${ck}/${o.gid}`)))ok=true;if(ok){o.ok=true;sentTo.add(o.k)}}
   const done=out.filter(o=>o.ok);
   if(done.length){D=load();done.forEach(o=>{const m=D.m.find(x=>x.gid===o.gid);if(m)m.syn=true});save();
@@ -554,10 +556,76 @@ async function syncMsgs(rows){
     if(ms.some(m=>m.from===meId()&&m.syn&&m.st!=='read')){const r=await cget(`rcpt/${ck}/${k}`);
       if(r&&typeof r==='object'){D=load();let ch=false;D.m.forEach(m=>{if(m.cid===c.id&&m.from===meId()&&m.syn){if(m.ts<=(r.rd||0)&&m.st!=='read'){m.st='read';ch=true}else if(m.ts<=(r.dl||0)&&m.st==='sent'){m.st='delivered';ch=true}}});if(ch)save()}}}
 }
+
+/* ---------- истории и лента: синхронизация ---------- */
+const picOf=blob=>new Promise(r=>{const u=URL.createObjectURL(blob),im=new Image();im.onload=()=>{const k=Math.min(1,1080/Math.max(im.width,im.height)),c=document.createElement('canvas');c.width=Math.max(1,Math.round(im.width*k));c.height=Math.max(1,Math.round(im.height*k));c.getContext('2d').drawImage(im,0,0,c.width,c.height);let q=.72,d=c.toDataURL('image/jpeg',q);while(d.length>900000&&q>.35){q-=.1;d=c.toDataURL('image/jpeg',q)}URL.revokeObjectURL(u);r(d)};im.onerror=()=>{URL.revokeObjectURL(u);r(null)};im.src=u});
+const blobOfPic=d=>{try{const m=/^data:(image\/[\w+.-]+);base64,(.*)$/.exec(d||'');if(!m)return null;const b=atob(m[2]),a=new Uint8Array(b.length);for(let i=0;i<b.length;i++)a[i]=b.charCodeAt(i);return new Blob([a],{type:m[1]})}catch{return null}};
+const LK=LSK('gh7lk','{}');let ST=0;
+const stNow=()=>{ST=0;SY=0;cloudSync(true)};
+const stKey=x=>{const o=usr(x.uid);return o?ek(o.email):null};
+function stDel(x){if(!DB||!x||!x.gid)return;const k=stKey(x);if(!k)return;cput(`story/${k}/${x.gid}`,null);cput(`spic/${x.gid}`,null);cput(`feedix/${x.gid}`,null)}
+function cmDel(x,c){if(!DB||!x||!x.gid||!c||!c.gid)return;const k=stKey(x);if(k)cput(`story/${k}/${x.gid}/cm/${c.gid}`,null)}
+async function userByKey(k){D=load();let o=D.u.find(x=>ek(x.email)===k);if(o)return o;const p=await cget('profiles/'+k);return p?importUser(p,true):null}
+async function applyStories(k,data,since){
+  const ou=await userByKey(k);if(!ou)return;
+  for(const g of Object.keys(data||{})){const x=data[g];if(!x||typeof x!=='object'||(x.k!=='img'&&x.k!=='text'))continue;
+    D=load();let l=D.s.find(s=>s.gid===g);
+    if(!l){let fid=null;
+      if(x.k==='img'){const pic=await cget('spic/'+g);const b=blobOfPic(pic);if(!b)continue;fid='f'+g.replace(/[^\w]/g,'');try{await idbPut(fid,b)}catch{continue}}
+      D=load();if(D.s.some(s=>s.gid===g))continue;
+      l={id:D.n++,uid:ou.id,k:x.k,th:(typeof x.th==='string'&&x.th.startsWith('data:image/'))?x.th:null,fid,w:+x.w||0,h:+x.h||0,text:String(x.text||'').slice(0,500),bg:(+x.bg||0)%12,cap:String(x.cap||'').slice(0,300),ts:+x.ts||Date.now(),feed:!!x.feed,likes:[],cm:[],seen:ou.id===meId()?[meId()]:[],gid:g,syn:true};D.s.push(l);save()}
+    // лайки
+    const lk=[];for(const lkk of Object.keys(x.likes||{})){const o=await userByKey(lkk);if(o)lk.push(o.id)}
+    D=load();l=D.s.find(s=>s.gid===g);if(!l)continue;
+    const mineNow=l.likes.includes(meId());
+    const nl=lk.filter(i=>i!==meId());if(lk.includes(meId())||(mineNow&&LK[g]!==true))nl.push(meId());
+    if(nl.length!==l.likes.length||nl.some(i=>!l.likes.includes(i))){l.likes=nl;save()}
+    // комментарии
+    const cmCl=x.cm||{};const cm=[];
+    for(const cg of Object.keys(cmCl).sort()){const c=cmCl[cg];if(!c||typeof c.t!=='string')continue;const o=await userByKey(c.u);if(!o)continue;
+      D=load();l=D.s.find(s=>s.gid===g);if(!l)break;
+      let lc=l.cm.find(y=>y.gid===cg);if(!lc){lc={id:D.n++,uid:o.id,t:c.t.slice(0,500),ts:+c.ts||Date.now(),gid:cg,syn:true};l.cm.push(lc);save()}}
+    D=load();l=D.s.find(s=>s.gid===g);if(l){const before=l.cm.length;l.cm=l.cm.filter(c=>!c.gid||!c.syn||(x.cm&&x.cm[c.gid]));l.cm.sort((p,q)=>p.ts-q.ts);if(l.cm.length!==before)save()}
+  }
+  if(since!==undefined){D=load();const keep=D.s.filter(s=>!(s.uid===ou.id&&s.syn&&s.gid&&s.ts>=since&&!(s.gid in (data||{}))));if(keep.length!==D.s.length){D.s=keep;save()}}
+}
+async function syncStories(rows){
+  const u=me();if(!u)return;const a=ek(u.email);
+  // 1) публикуем свои
+  D=load();let dirty=false;const mine=D.s.filter(x=>x.uid===meId()&&!x.syn);
+  mine.forEach(x=>{if(!x.gid){x.gid=newGid(x.ts);dirty=true}});if(dirty)save();
+  const upDone=[];
+  for(const x of mine){
+    if(!x.feed&&Date.now()-x.ts>=864e5){upDone.push(x.gid);continue}
+    if(x.k==='img'){let b=null;try{b=await idbGet(x.fid)}catch{}if(!b)continue;const pic=await picOf(b);if(!pic)continue;if(!await cput(`spic/${x.gid}`,pic))continue}
+    const body={k:x.k,text:x.text||'',cap:x.cap||'',bg:x.bg||0,ts:x.ts,feed:!!x.feed,w:x.w||0,h:x.h||0,th:x.th||''};
+    if(!await cput(`story/${a}/${x.gid}`,body))continue;
+    if(x.feed&&!await cput(`feedix/${x.gid}`,{k:a,ts:x.ts}))continue;
+    upDone.push(x.gid)}
+  if(upDone.length){D=load();D.s.forEach(x=>{if(upDone.includes(x.gid))x.syn=true});save()}
+  // 2) наши лайки и комментарии к историям
+  D=load();let dd=false;const tasks=[];
+  for(const x of D.s){if(!x.gid||!x.syn)continue;const ak=stKey(x);if(!ak)continue;
+    const liked=x.likes.includes(meId());if(LK[x.gid]!==liked&&!(LK[x.gid]===undefined&&!liked))tasks.push({p:`story/${ak}/${x.gid}/likes/${a}`,v:liked?true:null,lk:[x.gid,liked]});
+    x.cm.forEach(c=>{if(c.uid===meId()&&!c.syn){if(!c.gid){c.gid=newGid(c.ts);dd=true}tasks.push({p:`story/${ak}/${x.gid}/cm/${c.gid}`,v:{u:a,t:c.t,ts:c.ts},cg:c.gid,sg:x.gid})}})}
+  if(dd)save();
+  for(const t of tasks){if(await cput(t.p,t.v)){if(t.lk){LK[t.lk[0]]=t.lk[1];lsSet('gh7lk',LK)}if(t.cg){D=load();const s=D.s.find(y=>y.gid===t.sg),c=s&&s.cm.find(y=>y.gid===t.cg);if(c){c.syn=true;save()}}}}
+  // 3) забираем истории друзей и свои с других устройств
+  const since=Date.now()-864e5,keys=new Set([a]);Object.keys(rows).forEach(k=>{if(rows[k]&&rows[k].st==='a')keys.add(k)});
+  for(const k of keys){const data=await cgetq(`story/${k}`,`orderBy=${enc('"ts"')}&startAt=${since}`);if(data===undefined)continue;await applyStories(k,data||{},since)}
+  // 4) общая лента
+  const fx=await cgetq('feedix',`orderBy=${enc('"ts"')}&limitToLast=60`);
+  if(fx&&typeof fx==='object'){let oldest=Infinity;const ids=Object.keys(fx);ids.forEach(g=>{oldest=Math.min(oldest,+fx[g].ts||Infinity)});
+    let refreshed=0;
+    for(const g of ids){const v=fx[g];if(!v||typeof v.k!=='string')continue;if(keys.has(v.k))continue;
+      D=load();const have=D.s.some(s=>s.gid===g);if(have&&(ui.tab!=='feed'||refreshed>=15))continue;refreshed++;
+      const obj=await cget(`story/${v.k}/${g}`);if(obj)await applyStories(v.k,{[g]:obj})}
+    D=load();const keep=D.s.filter(s=>!(s.feed&&s.syn&&s.gid&&!keys.has(stKey(s))&&s.ts>=oldest&&!(s.gid in fx)));if(keep.length!==D.s.length){D.s=keep;save()}}
+}
 let SY=0,syBusy=false;
 async function cloudSync(force){
   if(!DB||syBusy||!meId())return;if(!force&&Date.now()-SY<2500)return;SY=Date.now();syBusy=true;
-  try{const rows=await syncRel();if(rows)await syncMsgs(rows)}catch(e){console.warn('GoodHi sync',e)}finally{syBusy=false}
+  try{const rows=await syncRel();if(rows){await syncMsgs(rows);if(Date.now()-ST>9000){ST=Date.now();await syncStories(rows)}}}catch(e){console.warn('GoodHi sync',e)}finally{syBusy=false}
 }
 const EJ=GHC.emailjs&&GHC.emailjs.serviceId&&!/YOUR_/.test(GHC.emailjs.serviceId)?GHC.emailjs:null;
 async function mailCode(to,code){
@@ -892,8 +960,8 @@ document.addEventListener('click',e=>{
   else if(a==='like'){ui.fx={like:+v};toggleLike(+v)}
   else if(a==='cm'){ui.sheet='cm';ui.sid=+v;ui.fx={sheet:1};draw()}
   else if(a==='cmsend')sendComment();
-  else if(a==='cmdel')mut(()=>{const x=D.s.find(y=>y.id===ui.sid);if(x)x.cm=x.cm.filter(c=>!(c.id===+v&&c.uid===meId()))});
-  else if(a==='delstory'){const id=+v;mut(()=>{D.s=D.s.filter(y=>y.id!==id)});if(SV){const k=SV.list.indexOf(id);if(k>=0){SV.list.splice(k,1);if(!SV.list.length)svClose();else{if(SV.i>=SV.list.length)SV.i=SV.list.length-1;svShow()}}}}
+  else if(a==='cmdel'){const x0=D.s.find(y=>y.id===ui.sid),c0=x0&&x0.cm.find(c=>c.id===+v&&c.uid===meId());if(c0)cmDel(x0,c0);mut(()=>{const x=D.s.find(y=>y.id===ui.sid);if(x)x.cm=x.cm.filter(c=>!(c.id===+v&&c.uid===meId()))})}
+  else if(a==='delstory'){const id=+v;stDel(D.s.find(y=>y.id===id&&y.uid===meId()));mut(()=>{D.s=D.s.filter(y=>y.id!==id)});if(SV){const k=SV.list.indexOf(id);if(k>=0){SV.list.splice(k,1);if(!SV.list.length)svClose();else{if(SV.i>=SV.list.length)SV.i=SV.list.length-1;svShow()}}}}
   else if(a==='spick')$('#sp').click();
   else if(a==='stext'){ui.sd.mode='text';draw()}
   else if(a==='sreset'){try{ui.sd.url&&URL.revokeObjectURL(ui.sd.url)}catch{}Object.assign(ui.sd,{mode:null,file:null,url:null});draw()}
@@ -1026,10 +1094,10 @@ function feedView(){
   };
   return `<div class="top"><h1>Лента</h1><button class="ib" data-a="newstory" aria-label="Новая история">${ic('plus',22)}</button></div>${strip()}<div class="list">${posts.length?posts.map(card).join(''):`<div class="empty" style="height:auto;padding:50px 20px"><div><b>В ленте пока пусто</b>Опубликуйте историю и выберите «выложить в ленту»: её увидят все в GoodHi.<div style="margin-top:18px"><button class="pb" data-a="newstory" style="max-width:260px">${ic('plus',18)}Новая история</button></div></div></div>`}</div>`;
 }
-function toggleLike(id){D=load();const x=D.s.find(y=>y.id===id);if(!x)return;const i=x.likes.indexOf(meId());if(i<0)x.likes.push(meId());else x.likes.splice(i,1);save();draw()}
+function toggleLike(id){D=load();const x=D.s.find(y=>y.id===id);if(!x)return;const i=x.likes.indexOf(meId());if(i<0)x.likes.push(meId());else x.likes.splice(i,1);save();draw();stNow()}
 function sendComment(){
   const i=$('#cmi'),t=(i&&i.value||'').trim().slice(0,300);if(!t||!ui.sid)return;i.value='';
-  mut(()=>{const x=D.s.find(y=>y.id===ui.sid);if(x)x.cm.push({id:D.n++,uid:meId(),t,ts:Date.now()})});if(cfg.sound)beep();
+  mut(()=>{const x=D.s.find(y=>y.id===ui.sid);if(x)x.cm.push({id:D.n++,uid:meId(),t,ts:Date.now()})});stNow();if(cfg.sound)beep();
 }
 async function publishStory(toFeed){
   const d=ui.sd;let fid=null;
@@ -1038,7 +1106,7 @@ async function publishStory(toFeed){
   mut(()=>{D.s.push({id:D.n++,uid:meId(),k:d.mode,th,fid,w:d.w,h:d.h,text:(d.text||'').trim(),bg:d.bg,cap:(d.cap||'').trim(),ts:Date.now(),feed:!!toFeed,likes:[],cm:[],seen:[meId()]})});
   try{d.url&&URL.revokeObjectURL(d.url)}catch{}
   ui.sd=null;closeSheet();ui.tab=toFeed?'feed':ui.tab;
-  toast(toFeed?'История в ленте':'История опубликована',toFeed?'Её видят все в GoodHi':'Друзья увидят её на 24 часа');
+  stNow();toast(toFeed?'История в ленте':'История опубликована',toFeed?'Её видят все в GoodHi':'Друзья увидят её на 24 часа');
 }
 let SV=null,SVT=null;const SVDUR=5000;
 function openStories(uid){
@@ -1229,7 +1297,7 @@ function tick(){
   incoming().forEach(x=>{if(inited&&!seenReq.has(x.fid)){if(cfg.on){toast('Заявка в друзья',`${full(x.u)} (@${x.u.un}) хочет дружить`);if(cfg.sound)beep()}}seenReq.add(x.fid)});
   D.s.forEach(x=>{
     const p=seenS[x.id];
-    if(!p){if(inited&&x.uid!==meId()&&cfg.on&&(x.feed||friends().some(f=>f.u.id===x.uid))){const u=usr(x.uid);if(u){toast('Новая история',full(u)+(x.feed?' выложил(а) в ленту':' опубликовал(а) историю'));if(cfg.sound)beep()}}}
+    if(!p){if(inited&&x.uid!==meId()&&Date.now()-x.ts<6e5&&cfg.on&&(x.feed||friends().some(f=>f.u.id===x.uid))){const u=usr(x.uid);if(u){toast('Новая история',full(u)+(x.feed?' выложил(а) в ленту':' опубликовал(а) историю'));if(cfg.sound)beep()}}}
     else if(x.uid===meId()&&inited&&cfg.on){
       if(x.likes.length>p.l){const u=usr(x.likes[x.likes.length-1]);if(u&&u.id!==meId()){toast(full(u),'оценил(а) вашу историю');if(cfg.sound)beep()}}
       if(x.cm.length>p.c){const c=x.cm[x.cm.length-1],u=usr(c.uid);if(u&&u.id!==meId()){toast(full(u),cfg.preview?'прокомментировал(а): '+c.t:'прокомментировал(а) вашу историю');if(cfg.sound)beep()}}
