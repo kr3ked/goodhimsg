@@ -3,115 +3,40 @@
     ".read": false,
     ".write": false,
     "users": {
-      ".read": "auth != null && auth.token.email === 'gleb64956@gmail.com'",
+      ".read": "auth != null && auth.token.email === 'ADMIN@EXAMPLE.COM'",
       "$k": {
         ".write": true
       }
     },
     "stories": {
-      ".read": "auth != null && auth.token.email === 'gleb64956@gmail.com'",
+      ".read": "auth != null && auth.token.email === 'ADMIN@EXAMPLE.COM'",
       "$k": {
         ".write": true
       }
     },
     "chats": {
-      ".read": "auth != null && auth.token.email === 'gleb64956@gmail.com'",
+      ".read": "auth != null && auth.token.email === 'ADMIN@EXAMPLE.COM'",
       "$k": {
         ".write": true
       }
     },
     "reports": {
-      ".read": "auth != null && auth.token.email === 'gleb64956@gmail.com'",
+      ".read": "auth != null && auth.token.email === 'ADMIN@EXAMPLE.COM'",
       "$id": {
-        ".write": "(auth != null && auth.token.email === 'gleb64956@gmail.com') || !data.exists()"
+        ".write": "(auth != null && auth.token.email === 'ADMIN@EXAMPLE.COM') || !data.exists()"
       }
     },
     "orders": {
-      ".read": "auth != null && auth.token.email === 'gleb64956@gmail.com'",
+      ".read": "auth != null && auth.token.email === 'ADMIN@EXAMPLE.COM'",
       "$id": {
-        ".write": "(auth != null && auth.token.email === 'gleb64956@gmail.com') || !data.exists()"
+        ".write": "(auth != null && auth.token.email === 'ADMIN@EXAMPLE.COM') || !data.exists()"
       }
     },
     "plus": {
-      ".read": "auth != null && auth.token.email === 'gleb64956@gmail.com'",
+      ".read": "auth != null && auth.token.email === 'ADMIN@EXAMPLE.COM'",
       "$k": {
         ".read": true,
-        ".write": "auth != null && auth.token.email === 'gleb64956@gmail.com'"
-      }
-    },
-    "profiles": {
-      "$u": {
-        ".read": true,
-        ".write": true
-      }
-    },
-    "un": {
-      ".read": true,
-      "$n": {
-        ".write": true
-      }
-    },
-    "eidx": {
-      "$e": {
-        ".read": true,
-        ".write": true
-      }
-    },
-    "uidmap": {
-      ".read": "auth != null && auth.token.email === 'gleb64956@gmail.com'",
-      "$u": {
-        ".write": true
-      }
-    },
-    "box": {
-      "$u": {
-        ".read": true,
-        ".write": true,
-        "fr": {
-          ".indexOn": [
-            "_u"
-          ]
-        },
-        "c": {
-          ".indexOn": [
-            "_u"
-          ]
-        },
-        "m": {
-          ".indexOn": [
-            "_u"
-          ]
-        },
-        "s": {
-          ".indexOn": [
-            "_u"
-          ]
-        }
-      }
-    },
-    "feed": {
-      ".read": true,
-      ".indexOn": [
-        "_u"
-      ],
-      "$s": {
-        ".write": true
-      }
-    },
-    "feedt": {
-      ".read": true,
-      ".write": true
-    },
-    "blob": {
-      "$b": {
-        ".read": true,
-        ".write": true
-      }
-    },
-    "stk": {
-      "$s": {
-        ".read": true,
-        ".write": true
+        ".write": "auth != null && auth.token.email === 'ADMIN@EXAMPLE.COM'"
       }
     },
     "devices": {
@@ -123,10 +48,16 @@
       }
     },
     "bans": {
-      ".read": "auth != null && auth.token.email === 'gleb64956@gmail.com'",
+      ".read": "auth != null && auth.token.email === 'ADMIN@EXAMPLE.COM'",
       "$k": {
         ".read": true,
-        ".write": "auth != null && auth.token.email === 'gleb64956@gmail.com'"
+        ".write": "auth != null && auth.token.email === 'ADMIN@EXAMPLE.COM'"
+      }
+    },
+    "profiles": {
+      "$k": {
+        ".read": true,
+        ".write": true
       }
     },
     "unames": {
@@ -156,40 +87,6 @@
         ".read": true,
         "$k": {
           ".write": true
-        }
-      }
-    },
-    "story": {
-      "$k": {
-        ".read": true,
-        ".indexOn": [
-          "ts"
-        ],
-        "$g": {
-          ".write": true
-        }
-      }
-    },
-    "spic": {
-      "$g": {
-        ".read": true,
-        ".write": true
-      }
-    },
-    "feedix": {
-      ".read": true,
-      ".indexOn": [
-        "ts"
-      ],
-      "$g": {
-        ".write": true
-      }
-    },
-    "mblob": {
-      "$ck": {
-        "$g": {
-          ".read": true,
-          ".write": "!data.exists()"
         }
       }
     }
