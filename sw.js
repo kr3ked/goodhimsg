@@ -1,6 +1,6 @@
 // GoodHi: сервис-воркер. Сначала сеть (чтобы обновления доходили сразу), без сети — копия из кэша.
 const V='goodhi-v1';
-const SHELL=['./','index.html','config.js','manifest.webmanifest','icons/icon-192.png','icons/icon-512.png'];
+const SHELL=['./','index.html','config.js','manifest.webmanifest','icon-192.png','icon-512.png','apple-touch-icon.png'];
 self.addEventListener('install',e=>{
   e.waitUntil(caches.open(V).then(c=>Promise.all(SHELL.map(u=>c.add(u).catch(()=>{})))).then(()=>self.skipWaiting()));
 });
