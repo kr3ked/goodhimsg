@@ -290,8 +290,8 @@ body.noauth .fly{display:block}
 /* голосовые и кружки */
 .shp-circle{border-radius:50%}.shp-squircle{border-radius:30%}.shp-square{border-radius:6%}.shp-blob{border-radius:62% 38% 58% 42%/48% 60% 40% 52%}
 .shp-heart{clip-path:url(#cl-heart)}.shp-star{clip-path:url(#cl-star)}.shp-hex{clip-path:url(#cl-hex)}.shp-diamond{clip-path:url(#cl-diamond)}
-.send.rec{touch-action:none;user-select:none;-webkit-user-select:none;-webkit-touch-callout:none}
-.comp:not(.hast) .send:not(.rec){display:none}.comp.hast .send.rec{display:none}
+.recb{touch-action:none;user-select:none;-webkit-user-select:none;-webkit-touch-callout:none;color:var(--ind);flex:none;transition:transform .12s,background .15s,box-shadow .15s}.recb:active{transform:scale(.9);box-shadow:0 0 0 6px rgba(99,102,241,.18)}
+.comp:not(.hast) .send{display:none}.comp.hast .recb{display:none}
 .vcard{display:flex;align-items:center;gap:10px;min-width:220px;max-width:100%}
 .vpb{width:40px;height:40px;border-radius:50%;flex:none;display:grid;place-items:center;border:0;color:inherit;background:rgba(255,255,255,.22);cursor:pointer}
 .m.in .vpb{background:var(--soft)}
@@ -304,12 +304,12 @@ body.noauth .fly{display:block}
 .vnv{position:fixed;inset:0;z-index:120;display:grid;place-items:center;background:rgba(0,0,0,.82);animation:fadein .2s both}
 .vnw{width:min(86vw,360px);height:min(86vw,360px);position:relative;background:#000;overflow:hidden}.vnw video{width:100%;height:100%;object-fit:cover;display:block}
 .vnt{position:absolute;left:50%;bottom:7%;transform:translateX(-50%);padding:2px 10px;border-radius:99px;background:rgba(0,0,0,.55);color:#fff;font-size:12px;font-weight:800}
-.rec{position:fixed;left:0;right:0;bottom:0;z-index:100;display:flex;flex-direction:column;align-items:center;gap:14px;pointer-events:none;padding-bottom:env(safe-area-inset-bottom);animation:fadein .15s both}
+.recov{position:fixed;left:0;right:0;bottom:0;z-index:100;display:flex;flex-direction:column;align-items:center;gap:14px;pointer-events:none;padding-bottom:env(safe-area-inset-bottom);animation:fadein .15s both}
 .recv{width:min(250px,68vw);height:min(250px,68vw);background:#000;pointer-events:auto;overflow:hidden;box-shadow:0 18px 50px rgba(0,0,0,.6);cursor:pointer}.recv video{width:100%;height:100%;object-fit:cover;transform:scaleX(-1);display:block}
 .recbar{pointer-events:auto;width:100%;display:flex;align-items:center;gap:12px;padding:10px 14px;background:var(--card);border-top:1px solid var(--line)}
 .recdot{width:12px;height:12px;border-radius:50%;background:#ef4444;animation:recp 1s ease-in-out infinite;flex:none}@keyframes recp{50%{opacity:.25}}
 .rect{font-weight:800;min-width:44px}.rech{flex:1;color:var(--mut);font-size:13px;font-weight:700;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
-.rec.cn .rech{color:#ef4444}.rec.lk .rech{color:var(--ind)}
+.recov.cn .rech{color:#ef4444}.recov.lk .rech{color:var(--ind)}
 .shgrid{display:grid;grid-template-columns:repeat(4,1fr);gap:8px}.shb{display:flex;flex-direction:column;align-items:center;gap:6px;padding:10px 4px;border-radius:16px;border:1px solid var(--line);background:var(--soft);color:var(--tx);cursor:pointer}.shb.on{border-color:var(--ind);box-shadow:0 0 0 2px var(--ind) inset}.shb small{font-size:11px;font-weight:800}
 .shpv{display:block;width:42px;height:42px;background:linear-gradient(135deg,var(--g1),var(--g2))}
 .vm2{display:flex;gap:8px;margin-bottom:12px}.vm2 button{flex:1;display:flex;align-items:center;justify-content:center;gap:8px;padding:12px;border-radius:14px;border:1px solid var(--line);background:var(--soft);color:var(--tx);font-weight:800;cursor:pointer}.vm2 button.on{border-color:var(--ind);box-shadow:0 0 0 2px var(--ind) inset}
@@ -845,7 +845,7 @@ function chatView(){
   const my=Object.values(D.stk).filter(x=>x.owner===meId());
   const tray=ui.tray?`<div class="tray ${FX.tray?'in':''}">${u.plus?`<div class="tgrid">${my.map(x=>`<div class="stk"><button data-a="sendstk" data-v="${x.id}" aria-label="Отправить стикер"><img src="${x.img}" alt=""></button><span class="x" data-a="delstk" data-v="${x.id}" role="button" aria-label="Удалить">${ic('x',12)}</span></div>`).join('')}<button class="stk add" data-a="addstk" aria-label="Создать стикер">${ic('plus',26)}</button></div><input id="sf" type="file" accept="image/*" hidden>${my.length?'':'<p class="hint" style="text-align:center;margin-top:8px">Создайте первый стикер из любой картинки.</p>'}`:`<div class="lock">${ic('lock',24)}<b>Свои стикеры: в Good Plus</b><span class="hint">Создавайте стикеры из своих картинок и отправляйте друзьям.</span><button class="pb pl" style="max-width:260px" data-a="sheet" data-v="shop">${ic('sparkles',18)}Открыть магазин</button></div>`}</div>`:'';
   const head=o?`<button class="who" data-a="uprof" data-v="${o.id}">${av(o,42)}<span><span class="nm" style="font-weight:800;display:block">${N(o)}</span><span class="sb2" style="font-size:12px;color:var(--mut);display:block">@${esc(o.un)} · профиль</span></span></button>`:`<div class="av" style="width:42px;height:42px;background:linear-gradient(135deg,${GR[4]})">${ic('bookmark',22)}</div><div><div class="nm" style="font-weight:800">Избранное</div><div class="sb2" style="font-size:12px;color:var(--mut)">заметки для себя</div></div>`;
-  return `<div class="chead"><button class="ib back" data-a="back" aria-label="Назад">${ic('arrowLeft')}</button>${head}${o?`<span style="margin-left:auto;display:flex;gap:4px"><button class="ib sm" data-a="call" data-v="a" aria-label="Позвонить">${ic('phone',18)}</button><button class="ib sm" data-a="call" data-v="v" aria-label="Видеозвонок">${ic('video',18)}</button></span>`:''}</div><div class="msgs" id="msgs">${ms.length?ms.map(bub).join(''):`<div class="empty" style="font-size:14px">Сообщений пока нет. Напишите первое!</div>`}</div>${tray}${att}<div class="comp"><button class="ib" data-a="stk" aria-label="Стикеры" style="flex:none">${ic('smile')}</button><button class="ib" data-a="att" aria-label="Прикрепить" style="flex:none">${ic('paperclip')}</button><input id="ph" type="file" accept="image/*" multiple hidden><input id="fl" type="file" multiple hidden><input class="inp" id="cin" placeholder="Сообщение" autocomplete="off"><button class="send" data-a="send" aria-label="Отправить">${ic('arrowUp',20)}</button><button class="send rec" data-rec="1" aria-label="Записать: удерживайте. Нажмите, чтобы переключить голосовое и кружок">${ic(cfg.vm==='vnote'?'video':'mic',22)}</button></div>`;
+  return `<div class="chead"><button class="ib back" data-a="back" aria-label="Назад">${ic('arrowLeft')}</button>${head}${o?`<span style="margin-left:auto;display:flex;gap:4px"><button class="ib sm" data-a="call" data-v="a" aria-label="Позвонить">${ic('phone',18)}</button><button class="ib sm" data-a="call" data-v="v" aria-label="Видеозвонок">${ic('video',18)}</button></span>`:''}</div><div class="msgs" id="msgs">${ms.length?ms.map(bub).join(''):`<div class="empty" style="font-size:14px">Сообщений пока нет. Напишите первое!</div>`}</div>${tray}${att}<div class="comp"><button class="ib" data-a="stk" aria-label="Стикеры" style="flex:none">${ic('smile')}</button><button class="ib" data-a="att" aria-label="Прикрепить" style="flex:none">${ic('paperclip')}</button><input id="ph" type="file" accept="image/*" multiple hidden><input id="fl" type="file" multiple hidden><input class="inp" id="cin" placeholder="Сообщение" autocomplete="off"><button class="send" data-a="send" aria-label="Отправить">${ic('arrowUp',20)}</button><button class="ib recb" data-rec="1" aria-label="Записать: удерживайте. Нажмите, чтобы переключить голосовое и кружок">${ic(cfg.vm==='vnote'?'video':'mic',22)}</button></div>`;
 }
 function sheetView(){
   const s=ui.sheet;if(!s)return '';const fx=FX.sheet?' in':'';let t='',b='';const u=me();
@@ -998,7 +998,7 @@ document.addEventListener('pointerdown',e=>{const b=e.target.closest&&e.target.c
   RP.tm=setTimeout(()=>{RP.live=true;recStart(cfg.vm==='vnote'?'vnote':'voice')},230)});
 window.addEventListener('pointermove',e=>{if(!RP.down)return;RP.dx=e.clientX-RP.x;RP.dy=e.clientY-RP.y;if(REC&&!REC.locked){const el=$('#rec');if(RP.dy<-70){REC.locked=true;if(el){el.classList.remove('cn');el.classList.add('lk');const h=el.querySelector('.rech');if(h)h.textContent='Запись закреплена'}}else if(el)el.classList.toggle('cn',RP.dx<-90)}});
 ['pointerup','pointercancel'].forEach(ev=>window.addEventListener(ev,()=>{if(!RP.down)return;RP.down=false;clearTimeout(RP.tm);
-  if(!RP.live){cfg.vm=cfg.vm==='vnote'?'voice':'vnote';saveCfg();document.querySelectorAll('.send.rec').forEach(b=>b.innerHTML=ic(cfg.vm==='vnote'?'video':'mic',22));toast(cfg.vm==='vnote'?'Режим: кружок':'Режим: голосовое','Удерживайте кнопку, чтобы записать');return}
+  if(!RP.live){cfg.vm=cfg.vm==='vnote'?'voice':'vnote';saveCfg();document.querySelectorAll('.recb').forEach(b=>b.innerHTML=ic(cfg.vm==='vnote'?'video':'mic',22));toast(cfg.vm==='vnote'?'Режим: кружок':'Режим: голосовое','Удерживайте кнопку, чтобы записать');return}
   if(!REC){if(RP.pend)RP.abort=true;return}
   if(REC.locked)return;
   recStop(!(ev==='pointercancel'||RP.dx<-90))}));
@@ -1019,7 +1019,7 @@ async function recStart(mode){
 }
 function recUi(){
   const R=REC;if(!R)return;$('#rec')?.remove();
-  const o=document.createElement('div');o.id='rec';o.className='rec';
+  const o=document.createElement('div');o.id='rec';o.className='recov';
   o.innerHTML=`${R.mode==='vnote'?`<div class="recv shp-${shapeOk(cfg.vs)}" data-a="recsh" title="Нажмите, чтобы сменить форму"><video muted playsinline autoplay></video></div>`:''}<div class="recbar"><span class="recdot"></span><b class="rect" id="rect">0:00</b><span class="rech">← отмена · ↑ закрепить</span><button class="ib" data-a="recx" aria-label="Отменить">${ic('trash',20)}</button><button class="send" data-a="recs" aria-label="Отправить">${ic('arrowUp',20)}</button></div>`;
   document.body.appendChild(o);const v=o.querySelector('video');if(v){v.srcObject=R.stream;v.play().catch(()=>{})}
 }
