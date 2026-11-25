@@ -3,40 +3,115 @@
     ".read": false,
     ".write": false,
     "users": {
-      ".read": "auth != null && auth.token.email === 'ADMIN@EXAMPLE.COM'",
+      ".read": "auth != null && auth.token.email === 'gleb64956@gmail.com'",
       "$k": {
         ".write": true
       }
     },
     "stories": {
-      ".read": "auth != null && auth.token.email === 'ADMIN@EXAMPLE.COM'",
+      ".read": "auth != null && auth.token.email === 'gleb64956@gmail.com'",
       "$k": {
         ".write": true
       }
     },
     "chats": {
-      ".read": "auth != null && auth.token.email === 'ADMIN@EXAMPLE.COM'",
+      ".read": "auth != null && auth.token.email === 'gleb64956@gmail.com'",
       "$k": {
         ".write": true
       }
     },
     "reports": {
-      ".read": "auth != null && auth.token.email === 'ADMIN@EXAMPLE.COM'",
+      ".read": "auth != null && auth.token.email === 'gleb64956@gmail.com'",
       "$id": {
-        ".write": "(auth != null && auth.token.email === 'ADMIN@EXAMPLE.COM') || !data.exists()"
+        ".write": "(auth != null && auth.token.email === 'gleb64956@gmail.com') || !data.exists()"
       }
     },
     "orders": {
-      ".read": "auth != null && auth.token.email === 'ADMIN@EXAMPLE.COM'",
+      ".read": "auth != null && auth.token.email === 'gleb64956@gmail.com'",
       "$id": {
-        ".write": "(auth != null && auth.token.email === 'ADMIN@EXAMPLE.COM') || !data.exists()"
+        ".write": "(auth != null && auth.token.email === 'gleb64956@gmail.com') || !data.exists()"
       }
     },
     "plus": {
-      ".read": "auth != null && auth.token.email === 'ADMIN@EXAMPLE.COM'",
+      ".read": "auth != null && auth.token.email === 'gleb64956@gmail.com'",
       "$k": {
         ".read": true,
-        ".write": "auth != null && auth.token.email === 'ADMIN@EXAMPLE.COM'"
+        ".write": "auth != null && auth.token.email === 'gleb64956@gmail.com'"
+      }
+    },
+    "profiles": {
+      "$u": {
+        ".read": true,
+        ".write": true
+      }
+    },
+    "un": {
+      ".read": true,
+      "$n": {
+        ".write": true
+      }
+    },
+    "eidx": {
+      "$e": {
+        ".read": true,
+        ".write": true
+      }
+    },
+    "uidmap": {
+      ".read": "auth != null && auth.token.email === 'gleb64956@gmail.com'",
+      "$u": {
+        ".write": true
+      }
+    },
+    "box": {
+      "$u": {
+        ".read": true,
+        ".write": true,
+        "fr": {
+          ".indexOn": [
+            "_u"
+          ]
+        },
+        "c": {
+          ".indexOn": [
+            "_u"
+          ]
+        },
+        "m": {
+          ".indexOn": [
+            "_u"
+          ]
+        },
+        "s": {
+          ".indexOn": [
+            "_u"
+          ]
+        }
+      }
+    },
+    "feed": {
+      ".read": true,
+      ".indexOn": [
+        "_u"
+      ],
+      "$s": {
+        ".write": true
+      }
+    },
+    "feedt": {
+      ".read": true,
+      ".write": true
+    },
+    "blob": {
+      "$b": {
+        ".read": true,
+        ".write": true
+      }
+    },
+    "stk": {
+      "$s": {
+        ".read": true,
+        ".write": true
       }
     },
     "devices": {
@@ -48,16 +123,10 @@
       }
     },
     "bans": {
-      ".read": "auth != null && auth.token.email === 'ADMIN@EXAMPLE.COM'",
+      ".read": "auth != null && auth.token.email === 'gleb64956@gmail.com'",
       "$k": {
         ".read": true,
-        ".write": "auth != null && auth.token.email === 'ADMIN@EXAMPLE.COM'"
-      }
-    },
-    "profiles": {
-      "$k": {
-        ".read": true,
-        ".write": true
+        ".write": "auth != null && auth.token.email === 'gleb64956@gmail.com'"
       }
     },
     "unames": {
@@ -88,6 +157,104 @@
         "$k": {
           ".write": true
         }
+      }
+    },
+    "story": {
+      "$k": {
+        ".read": true,
+        ".indexOn": [
+          "ts"
+        ],
+        "$g": {
+          ".write": true
+        }
+      }
+    },
+    "spic": {
+      "$g": {
+        ".read": true,
+        ".write": true
+      }
+    },
+    "feedix": {
+      ".read": true,
+      ".indexOn": [
+        "ts"
+      ],
+      "$g": {
+        ".write": true
+      }
+    },
+    "mblob": {
+      "$ck": {
+        ".write": "!newData.exists()",
+        "$g": {
+          ".read": true,
+          ".write": "!data.exists()"
+        }
+      }
+    },
+    "push": {
+      "$k": {
+        "$id": {
+          ".write": true
+        }
+      }
+    },
+    "gr": {
+      "$g": {
+        ".read": true,
+        ".write": true
+      }
+    },
+    "gmem": {
+      "$g": {
+        ".read": true,
+        ".write": "!newData.exists()",
+        "$k": {
+          ".write": true
+        }
+      }
+    },
+    "gl": {
+      "$g": {
+        ".read": true,
+        ".write": true
+      }
+    },
+    "gmsg": {
+      "$g": {
+        ".read": true,
+        ".write": "!newData.exists()",
+        "$m": {
+          ".write": "!data.exists() || !newData.exists()"
+        }
+      }
+    },
+    "ug": {
+      "$k": {
+        ".read": true,
+        "$g": {
+          ".write": true
+        }
+      }
+    },
+    "ginv": {
+      "$c": {
+        ".read": true,
+        ".write": "!data.exists() || !newData.exists()"
+      }
+    },
+    "ghandle": {
+      "$h": {
+        ".read": true,
+        ".write": "!data.exists() || !newData.exists()"
+      }
+    },
+    "grav": {
+      "$g": {
+        ".read": true,
+        ".write": true
       }
     }
   }

@@ -319,6 +319,13 @@ body.noauth .fly{display:block}
 .shgrid{display:grid;grid-template-columns:repeat(4,1fr);gap:8px}.shb{display:flex;flex-direction:column;align-items:center;gap:6px;padding:10px 4px;border-radius:16px;border:1px solid var(--line);background:var(--soft);color:var(--tx);cursor:pointer}.shb.on{border-color:var(--ind);box-shadow:0 0 0 2px var(--ind) inset}.shb small{font-size:11px;font-weight:800}
 .shpv{display:block;width:42px;height:42px;background:linear-gradient(135deg,var(--g1),var(--g2))}
 .vm2{display:flex;gap:8px;margin-bottom:12px}.vm2 button{flex:1;display:flex;align-items:center;justify-content:center;gap:8px;padding:12px;border-radius:14px;border:1px solid var(--line);background:var(--soft);color:var(--tx);font-weight:800;cursor:pointer}.vm2 button.on{border-color:var(--ind);box-shadow:0 0 0 2px var(--ind) inset}
+
+/* группы и каналы */
+.gsn{display:block;font-size:12px;font-weight:800;color:var(--ind);margin-bottom:2px}
+.m.out .gsn{color:rgba(255,255,255,.85)}
+.comp.ro{justify-content:center;color:var(--mut);font-weight:700;font-size:14px;padding:16px;text-align:center}
+.gck{width:24px;height:24px;border-radius:50%;border:2px solid var(--line);display:grid;place-items:center;flex:none;color:#fff}.gck.on{background:var(--ind);border-color:var(--ind)}
+.gcode{display:flex;align-items:center;gap:8px;padding:8px 8px 8px 14px;border-radius:14px;background:var(--soft);font-weight:800;letter-spacing:.06em;word-break:break-all}
 </style>
 </head>
 <body>
@@ -347,6 +354,9 @@ const mut=fn=>{D=load();fn();save();draw()};
 const meId=()=>+sessionStorage.gh7s||0;
 const me=()=>D.u.find(u=>u.id===meId());
 const usr=id=>D.u.find(u=>u.id===id);
+const pl=(n,f)=>{const a=n%10,b=n%100;return b>10&&b<20?f[2]:a===1?f[0]:a>1&&a<5?f[1]:f[2]};
+const gav=(c,s=48)=>`<div class="av" style="width:${s}px;height:${s}px;font-size:${s*.36}px;background:linear-gradient(135deg,${GR[c.g||0]})">${c.av?`<img src="${esc(c.av)}" alt="">`:ic(c.type==='channel'?'megaphone':'users',Math.round(s*.5))}</div>`;
+const gsub=c=>{const n=(c.m||[]).length;return c.type==='channel'?`${n} ${pl(n,['подписчик','подписчика','подписчиков'])}`:`${n} ${pl(n,['участник','участника','участников'])}`};
 const full=u=>(u.first+' '+(u.last||'')).trim();
 try{if(!sessionStorage.gh7s&&localStorage.gh7ps){const ps=JSON.parse(localStorage.gh7ps);if(ps&&ps.uid&&D.u.find(x=>x.id===ps.uid))sessionStorage.gh7s=ps.uid}}catch{}
 const ini=u=>full(u).split(' ').filter(Boolean).map(w=>w[0]).slice(0,2).join('').toUpperCase()||'?';
@@ -379,7 +389,8 @@ file:'<path d="M14.5 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V7.5z"/>
 download:'<path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4M7 10l5 5 5-5M12 15V3"/>',
 phone:'<path d="M22 16.9v3a2 2 0 0 1-2.2 2 19.8 19.8 0 0 1-8.6-3.1 19.5 19.5 0 0 1-6-6A19.8 19.8 0 0 1 2.1 4.2 2 2 0 0 1 4.1 2h3a2 2 0 0 1 2 1.7c.1 1 .4 1.9.7 2.8a2 2 0 0 1-.5 2.1L8 9.9a16 16 0 0 0 6 6l1.3-1.3a2 2 0 0 1 2.1-.4c.9.3 1.8.6 2.8.7a2 2 0 0 1 1.7 2z"/>',
 phoneOff:'<path d="M10.7 13.3a16 16 0 0 0 3 2.3l1.3-1.3a2 2 0 0 1 2.1-.4c.9.3 1.8.6 2.8.7a2 2 0 0 1 1.7 2v3a2 2 0 0 1-2.2 2A19.8 19.8 0 0 1 3.1 5.2 2 2 0 0 1 5.1 3h3a2 2 0 0 1 2 1.7c.1 1 .4 1.9.7 2.8a2 2 0 0 1-.5 2.1L9 10.9"/><path d="m22 2-20 20"/>',
-play:'<path d="M7 4.5v15l12-7.5z"/>',pause:'<rect x="6" y="4.5" width="4" height="15" rx="1"/><rect x="14" y="4.5" width="4" height="15" rx="1"/>',
+megaphone:'<path d="M3 11v2a1 1 0 0 0 1 1h2l5 4V6L6 10H4a1 1 0 0 0-1 1z"/><path d="M15 8.5a5 5 0 0 1 0 7"/><path d="M18 6a8 8 0 0 1 0 12"/>',link:'<path d="M10 13a5 5 0 0 0 7.07 0l2.12-2.12a5 5 0 0 0-7.07-7.07L11 5"/><path d="M14 11a5 5 0 0 0-7.07 0L4.8 13.12a5 5 0 0 0 7.07 7.07L13 19"/>',copy:'<rect x="9" y="9" width="11" height="11" rx="2"/><path d="M5 15V5a2 2 0 0 1 2-2h10"/>',
+  play:'<path d="M7 4.5v15l12-7.5z"/>',pause:'<rect x="6" y="4.5" width="4" height="15" rx="1"/><rect x="14" y="4.5" width="4" height="15" rx="1"/>',
   mic:'<path d="M12 2a3 3 0 0 0-3 3v7a3 3 0 0 0 6 0V5a3 3 0 0 0-3-3z"/><path d="M19 10v2a7 7 0 0 1-14 0v-2M12 19v3"/>',
 micOff:'<path d="m2 2 20 20"/><path d="M9 9v3a3 3 0 0 0 5.1 2.1M15 9.3V5a3 3 0 0 0-5.7-1.3"/><path d="M19 10v2a7 7 0 0 1-.1 1.2M5 10v2a7 7 0 0 0 11.7 5.2M12 19v3"/>',
 video:'<path d="m22 8-6 4 6 4z"/><rect x="2" y="6" width="14" height="12" rx="2"/>',
@@ -502,7 +513,7 @@ function cloudFlush(){
   d.u.filter(u=>!u.rem).forEach(u=>{want['profiles/'+ek(u.email)]={email:u.email,un:u.un,first:u.first,last:u.last||'',bio:u.bio||'',g:u.g||0,ts:u.ts||0,photo:(u.photo&&String(u.photo).startsWith('data:image/'))?u.photo:''};want['unames/'+u.un]=ek(u.email);want['users/'+ek(u.email)]={email:u.email,un:u.un,first:u.first,last:u.last||'',bio:u.bio||'',plus:!!u.plus,ts:u.ts||0,photo:(u.photo&&String(u.photo).startsWith('data:image/'))?u.photo:''}});
   (d.s||[]).forEach(s=>{const k=key(s.uid);if(!k)return;want['stories/'+k+'_'+s.id]={u:k,k:s.k,text:s.text||'',cap:s.cap||'',bg:s.bg||0,ts:s.ts,feed:!!s.feed,likes:(s.likes||[]).length,cm:(s.cm||[]).length,th:s.th||''}});
   d.c.forEach(c=>{const ms=c.m.map(key).filter(Boolean);if(!ms.length)return;const n=d.m.filter(m=>m.cid===c.id);
-    want['chats/'+c.type+'_'+ms.slice().sort().join('__')]={type:c.type,members:ms,n:n.length,last:n.length?n[n.length-1].ts:0}});
+    want['chats/'+(c.gid?c.type+'_'+c.gid:c.type+'_'+ms.slice().sort().join('__'))]={type:c.type,members:ms,n:n.length,last:n.length?n[n.length-1].ts:0}});
   let prev=[];try{prev=JSON.parse(localStorage.gh7ck||'[]')}catch{}
   prev.filter(k=>!(k in want)&&!k.startsWith('users/')&&!k.startsWith('profiles/')&&!k.startsWith('unames/')).forEach(k=>{cput(k,null);delete cSent[k]});
   try{localStorage.gh7ck=JSON.stringify(Object.keys(want))}catch{}
@@ -675,10 +686,167 @@ async function syncStories(rows){
       const obj=await cget(`story/${v.k}/${g}`);if(obj)await applyStories(v.k,{[g]:obj})}
     D=load();const keep=D.s.filter(s=>!(s.feed&&s.syn&&s.gid&&!keys.has(stKey(s))&&s.ts>=oldest&&!(s.gid in fx)));if(keep.length!==D.s.length){D.s=keep;save()}}
 }
+/* ---------- группы и каналы: синхронизация ---------- */
+const isGrp=c=>!!c&&(c.type==='group'||c.type==='channel');
+const gclip=(t,n)=>String(t||'').replace(/\s+/g,' ').trim().slice(0,n);
+const rnd=(n,al='abcdefghjkmnpqrstuvwxyz23456789')=>{let o='';const cr=globalThis.crypto;if(cr&&cr.getRandomValues){const a=new Uint32Array(n);cr.getRandomValues(a);a.forEach(v=>o+=al[v%al.length])}else for(let i=0;i<n;i++)o+=al[Math.floor(Math.random()*al.length)];return o};
+const tokn=()=>Date.now().toString(36)+rnd(4);
+const LT=LSK('gh7lt','{}');
+const roleOk=r=>r==='o'||r==='a'?r:'m';
+const cleanRoles=r=>{const o={};Object.keys(r||{}).forEach(k=>{if(typeof r[k]==='string')o[k]=roleOk(r[k])});return o};
+const gMy=c=>{const u=me();return u&&c.roles?(c.roles[ek(u.email)]||''):''};
+const canAdmin=c=>gMy(c)==='o'||gMy(c)==='a';
+const canPost=c=>!isGrp(c)||(c.type==='group'?!!gMy(c):canAdmin(c));
+function gRemoveLocal(gid){D=load();const c=D.c.find(x=>x.gid===gid);if(!c)return;D.c=D.c.filter(x=>x!==c);D.m=D.m.filter(m=>m.cid!==c.id);delete LT[gid];lsSet('gh7lt',LT);if(ui.chat===c.id){ui.chat=null;ui.sheet=null}save()}
+async function gApply(gid,meta,roles,av,mv){
+  const a=ek(me().email),rl=cleanRoles(roles);
+  const uids=[];for(const k of Object.keys(rl)){const o=k===a?me():await userByKey(k);if(o)uids.push(o.id)}
+  D=load();
+  if(!rl[a]){gRemoveLocal(gid);return}
+  let c=D.c.find(x=>x.gid===gid);if(!c){c={id:D.n++,type:meta.t==='channel'?'channel':'group',gid};D.c.push(c)}
+  Object.assign(c,{type:meta.t==='channel'?'channel':'group',name:gclip(meta.name,60)||'Без названия',desc:gclip(meta.desc,300),g:(+meta.g||0)%6,own:String(meta.own||''),code:String(meta.code||''),h:String(meta.h||''),ts:+meta.ts||0,roles:rl,m:uids,syn:true,mv:mv||'',av:(typeof av==='string'&&av.startsWith('data:image/'))?av:null});
+  save();
+}
+async function gFetch(gid){
+  const [meta,roles,av,gl]=await Promise.all([cget('gr/'+gid),cget('gmem/'+gid),cget('grav/'+gid),cget('gl/'+gid)]);
+  if(!meta||typeof meta!=='object'||!roles||typeof roles!=='object')return;
+  await gApply(gid,meta,roles,av,(gl&&gl.mv)||'');
+  await gPull(gid);
+}
+async function gUpload(cid){
+  D=load();const c=D.c.find(x=>x.id===cid);if(!c||!me())return;
+  const a=ek(me().email),gid=c.gid,code=c.code,h=c.h||'',av=c.av||'',roles={...c.roles},mv=tokn();
+  const meta={t:c.type,name:c.name,desc:c.desc||'',g:c.g||0,own:a,ts:c.ts||Date.now(),code,h};
+  if(!await cput(`gr/${gid}`,meta))return;
+  const jobs=[cput(`ginv/${code}`,gid),cput(`gl/${gid}`,{mv,last:''})];
+  Object.keys(roles).forEach(k=>{jobs.push(cput(`gmem/${gid}/${k}`,roles[k]));jobs.push(cput(`ug/${k}/${gid}`,{r:roles[k],ts:Date.now()}))});
+  if(h)jobs.push(cput(`ghandle/${h}`,gid));if(av)jobs.push(cput(`grav/${gid}`,av));
+  const r=await Promise.all(jobs);if(!r.every(Boolean))return;
+  D=load();const l=D.c.find(x=>x.id===cid);if(l){l.syn=true;l.mv=mv;save()}
+}
+async function gPull(gid){
+  const a=ek(me().email),gl=await cget('gl/'+gid),tok=(gl&&gl.last)||'';
+  D=load();let c=D.c.find(x=>x.gid===gid);if(!c||!c.roles)return;
+  let last='';D.m.forEach(m=>{if(m.cid===c.id&&m.syn&&m.gid&&m.gid>last)last=m.gid});
+  const qs=last?`orderBy=${enc('"$key"')}&startAt=${enc('"'+last+'"')}`:`orderBy=${enc('"$key"')}&limitToLast=300`;
+  const data=await cgetq('gmsg/'+gid,qs);if(data===undefined)return;
+  const ids=Object.keys(data||{}).sort(),isV=x=>x&&(x.k==='voice'||x.k==='vnote');
+  D=load();const need=ids.filter(g=>isV(data[g])&&!D.m.some(m=>m.gid===g)),got={};let fail=false;
+  for(const g of need){const du=await cget(`mblob/g_${gid}/${g}`);if(du===undefined){fail=true;continue}const b=blobOfData(du);if(!b)continue;const fid='f'+g.replace(/[^\w]/g,'');try{await idbPut(fid,b);got[g]=fid}catch{fail=true}}
+  D=load();c=D.c.find(x=>x.gid===gid);if(!c)return;let chg=false;
+  for(const g of ids){const x=data[g];if(!x||typeof x!=='object')continue;
+    const role=(c.roles[x.f]||'');if(!role)continue;                                  // отправитель не участник
+    if(c.type==='channel'&&role!=='o'&&role!=='a')continue;                            // в канале пишут только администраторы
+    const fu=x.f===a?me():D.u.find(u=>ek(u.email)===x.f);if(!fu)continue;
+    const v=isV(x);if(!v&&typeof x.t!=='string')continue;
+    if(v&&!got[g]&&!D.m.some(m=>m.gid===g))continue;
+    const ex=D.m.find(m=>m.gid===g)||(!v&&D.m.find(m=>m.cid===c.id&&!m.gid&&m.from===fu.id&&m.ts===x.ts&&m.t===x.t));
+    if(ex){if(!ex.syn||!ex.gid){ex.gid=g;ex.syn=true;chg=true}continue}
+    if(v)D.m.push({id:D.n++,cid:c.id,from:fu.id,k:x.k,fid:got[g],dur:Math.min(600,+x.dur||0),wf:wfOk(x.wf),th:(typeof x.th==='string'&&x.th.startsWith('data:image/'))?x.th:null,sh:shapeOk(x.sh),mime:String(x.mime||'').slice(0,60),t:x.k==='vnote'?'Кружок':'Голосовое сообщение',ts:+x.ts||Date.now(),st:fu.id===meId()?'sent':'sent',gid:g,syn:true});
+    else D.m.push({id:D.n++,cid:c.id,from:fu.id,t:x.t.slice(0,4000),ts:+x.ts||Date.now(),st:'sent',gid:g,syn:true});
+    chg=true}
+  if(chg){D.m.sort((p,q)=>p.ts-q.ts);save()}
+  if(!fail){LT[gid]=tok;lsSet('gh7lt',LT)}
+}
+async function gPush(gid,a){
+  D=load();const c=D.c.find(x=>x.gid===gid);if(!c||!c.roles)return;
+  const role=c.roles[a]||'';if(!role)return;if(c.type==='channel'&&role!=='o'&&role!=='a')return;
+  let dirty=false;const out=[];
+  D.m.forEach(m=>{const vm=(m.k==='voice'||m.k==='vnote')&&m.fid;if(m.cid===c.id&&m.from===meId()&&!m.syn&&((!m.k&&typeof m.t==='string')||vm)){if(!m.gid){m.gid=detGid(m.ts,a,vm?m.k+(m.dur||0):m.t);dirty=true}out.push({gid:m.gid,t:vm?'':m.t,ts:m.ts,mk:vm?m.k:'',dur:m.dur||0,wf:m.wf||'',th:m.th||'',sh:m.sh||'circle',fid:m.fid,mime:m.mime||''})}});
+  if(dirty)save();const okIds=[];
+  for(const o of out){
+    if(o.mk){let b=null;try{b=await idbGet(o.fid)}catch{}if(!b)continue;const du=await blobToData(b);if(!du)continue;if(!await cput(`mblob/g_${gid}/${o.gid}`,du)&&!(await cget(`mblob/g_${gid}/${o.gid}`)))continue}
+    let ok=await cput(`gmsg/${gid}/${o.gid}`,o.mk?{f:a,t:'',ts:o.ts,k:o.mk,dur:o.dur,wf:o.wf,th:o.th,sh:o.sh,mime:o.mime}:{f:a,t:o.t,ts:o.ts});
+    if(!ok&&(await cget(`gmsg/${gid}/${o.gid}`)))ok=true;if(ok)okIds.push(o.gid)}
+  if(okIds.length){D=load();D.m.forEach(m=>{if(okIds.includes(m.gid))m.syn=true});save();await cpatch(`gl/${gid}`,{last:tokn()})}
+}
+async function gPoll(gid,a){
+  const gl=await cget('gl/'+gid);if(gl===undefined)return;
+  D=load();let c=D.c.find(x=>x.gid===gid);if(!c)return;
+  if(gl&&gl.mv&&gl.mv!==c.mv){const [meta,roles,av]=await Promise.all([cget('gr/'+gid),cget('gmem/'+gid),cget('grav/'+gid)]);if(meta&&typeof meta==='object'&&roles&&typeof roles==='object')await gApply(gid,meta,roles,av,gl.mv)}
+  D=load();c=D.c.find(x=>x.gid===gid);if(!c)return;
+  if(gl&&(gl.last||'')!==(LT[gid]||''))await gPull(gid);
+  await gPush(gid,a);
+}
+async function syncGroups(){
+  const u=me();if(!u||!DB)return;const a=ek(u.email);
+  D=load();for(const c of D.c.filter(c=>isGrp(c)&&!c.syn&&c.own===a))await gUpload(c.id);
+  const ug=await cget('ug/'+a);if(ug===undefined)return;const mem=ug&&typeof ug==='object'?ug:{};
+  D=load();D.c.filter(c=>isGrp(c)&&c.syn&&!mem[c.gid]).forEach(c=>gRemoveLocal(c.gid));
+  for(const gid of Object.keys(mem)){D=load();if(!D.c.some(c=>c.gid===gid))await gFetch(gid)}
+  D=load();for(const c of D.c.filter(c=>isGrp(c)&&c.syn&&mem[c.gid]))await gPoll(c.gid,a);
+}
+async function gBump(gid){const tk=tokn();await cpatch(`gl/${gid}`,{mv:tk});D=load();const l=D.c.find(x=>x.gid===gid);if(l){l.mv=tk;save()}}
+async function gCreate(d){
+  const u=me();if(!u)return{err:'Войдите в аккаунт'};const a=ek(u.email),name=gclip(d.name,60);if(!name)return{err:'Введите название'};
+  let h=String(d.h||'').trim().toLowerCase().replace(/^@/,'');
+  if(h){if(!UNRE.test(h))return{err:'Публичное имя: 3–20 символов, латиница, цифры и _'};const ex=await cget('ghandle/'+h);if(ex===undefined)return{err:'Нет связи с базой, попробуйте ещё раз'};if(ex)return{err:'Это публичное имя уже занято'}}
+  D=load();const roles={[a]:'o'},m=[meId()];
+  (d.pick||[]).forEach(id=>{const o=usr(id);if(o&&rel(id)==='friend'&&!m.includes(id)){m.push(id);roles[ek(o.email)]='m'}});
+  const c={id:D.n++,type:d.t==='channel'?'channel':'group',gid:'g'+Date.now().toString(36)+rnd(6),name,desc:gclip(d.desc,300),g:Math.floor(Math.random()*6),av:null,own:a,code:rnd(10),h,ts:Date.now(),roles,m,syn:false,mv:''};
+  D.c.push(c);save();return{cid:c.id};
+}
+async function gAdd(cid,uids){
+  D=load();const c=D.c.find(x=>x.id===cid);if(!c||!c.syn||!canAdmin(c))return;
+  const add=uids.map(id=>D.u.find(u=>u.id===id)).filter(u=>u&&!c.m.includes(u.id));if(!add.length)return;
+  add.forEach(u=>{c.m.push(u.id);c.roles[ek(u.email)]='m'});save();
+  await Promise.all(add.flatMap(u=>{const k=ek(u.email);return [cput(`gmem/${c.gid}/${k}`,'m'),cput(`ug/${k}/${c.gid}`,{r:'m',ts:Date.now()})]}));
+  await gBump(c.gid);
+}
+async function gRemove(cid,key){
+  D=load();const c=D.c.find(x=>x.id===cid);if(!c||!c.syn)return;const r=c.roles[key];
+  if(!r||r==='o'||key===ek(me().email))return;if(gMy(c)!=='o'&&!(canAdmin(c)&&r==='m'))return;
+  c.m=c.m.filter(id=>{const o=D.u.find(u=>u.id===id);return !o||ek(o.email)!==key});delete c.roles[key];save();
+  await Promise.all([cput(`gmem/${c.gid}/${key}`,null),cput(`ug/${key}/${c.gid}`,null)]);await gBump(c.gid);
+}
+async function gSetRole(cid,key){
+  D=load();const c=D.c.find(x=>x.id===cid);if(!c||!c.syn||gMy(c)!=='o')return;const r=c.roles[key];if(!r||r==='o')return;
+  const nr=r==='a'?'m':'a';c.roles[key]=nr;save();
+  await Promise.all([cput(`gmem/${c.gid}/${key}`,nr),cput(`ug/${key}/${c.gid}`,{r:nr,ts:Date.now()})]);await gBump(c.gid);
+}
+async function gLeave(cid){
+  D=load();const c=D.c.find(x=>x.id===cid);if(!c)return false;const a=ek(me().email);if(c.syn&&gMy(c)==='o')return false;
+  if(c.syn){const r=await Promise.all([cput(`gmem/${c.gid}/${a}`,null),cput(`ug/${a}/${c.gid}`,null)]);if(!r.every(Boolean))return false;await cpatch(`gl/${c.gid}`,{mv:tokn()})}
+  gRemoveLocal(c.gid);return true;
+}
+async function gDelete(cid){
+  D=load();const c=D.c.find(x=>x.id===cid);if(!c)return false;
+  if(!c.syn){gRemoveLocal(c.gid);return true}
+  if(gMy(c)!=='o')return false;const gid=c.gid;
+  const mm=await cget('gmem/'+gid);if(mm===undefined)return false;
+  const jobs=Object.keys(mm||{}).map(k=>cput(`ug/${k}/${gid}`,null));
+  ['gr','gmem','gl','grav','gmsg'].forEach(n=>jobs.push(cput(`${n}/${gid}`,null)));jobs.push(cput(`ginv/${c.code}`,null));if(c.h)jobs.push(cput(`ghandle/${c.h}`,null));
+  const r=await Promise.all(jobs);if(!r.every(Boolean))return false;cput(`mblob/g_${gid}`,null);gRemoveLocal(gid);return true;
+}
+async function gEdit(cid,o){
+  D=load();const c=D.c.find(x=>x.id===cid);if(!c||!c.syn||!canAdmin(c))return;
+  const patch={};if(o.name!==undefined){c.name=gclip(o.name,60)||c.name;patch.name=c.name}if(o.desc!==undefined){c.desc=gclip(o.desc,300);patch.desc=c.desc}
+  if(o.av!==undefined)c.av=o.av;save();
+  if(Object.keys(patch).length)await cpatch(`gr/${c.gid}`,patch);
+  if(o.av!==undefined)await cput(`grav/${c.gid}`,o.av||null);
+  await gBump(c.gid);
+}
+async function gJoin(raw){
+  const u=me();if(!u)return{err:'Войдите в аккаунт'};const a=ek(u.email);
+  let q=String(raw||'').trim();const mm=q.match(/[?&]join=([A-Za-z0-9]+)/);if(mm)q=mm[1];q=q.toLowerCase();
+  if(!q)return{err:'Введите код приглашения или @имя'};let gid=null;
+  if(q.startsWith('@')){const h=q.slice(1);if(!UNRE.test(h))return{err:'Неверное имя'};gid=await cget('ghandle/'+h)}
+  else{if(!/^[a-z0-9]{6,20}$/.test(q))return{err:'Неверный код приглашения'};gid=await cget('ginv/'+q)}
+  if(gid===undefined)return{err:'Нет связи с базой, попробуйте ещё раз'};
+  if(typeof gid!=='string'||!gid)return{err:'Ничего не нашли. Проверьте код или имя.'};
+  const meta=await cget('gr/'+gid);if(!meta)return{err:'Группа или канал удалены'};
+  D=load();let c=D.c.find(x=>x.gid===gid);if(c)return{cid:c.id};
+  const cur=await cget(`gmem/${gid}/${a}`);
+  if(!cur){const ok=(await cput(`gmem/${gid}/${a}`,'m'))&&(await cput(`ug/${a}/${gid}`,{r:'m',ts:Date.now()}));if(!ok)return{err:'Не удалось вступить'};await cpatch(`gl/${gid}`,{mv:tokn()})}
+  else await cput(`ug/${a}/${gid}`,{r:roleOk(cur),ts:Date.now()});
+  await gFetch(gid);D=load();c=D.c.find(x=>x.gid===gid);return c?{cid:c.id}:{err:'Не удалось открыть'};
+}
 let SY=0,syBusy=false;
 async function cloudSync(force){
   if(!DB||syBusy||!meId())return;if(!force&&Date.now()-SY<2500)return;SY=Date.now();syBusy=true;
-  try{const rows=await syncRel();if(rows){await syncMsgs(rows);if(Date.now()-ST>9000){ST=Date.now();await syncStories(rows)}}}catch(e){console.warn('GoodHi sync',e)}finally{syBusy=false}
+  if(!PUSHDONE&&typeof pushOn==='function'){PUSHDONE=true;pushOn(false)}
+  if(sessionStorage.ghJ){const j=sessionStorage.ghJ;sessionStorage.removeItem('ghJ');gJoin(j).then(r=>{if(r.cid){ui.tab='chats';ui.chat=r.cid;ui.fx={pane:'open'};draw()}else toast('Не удалось вступить',r.err||'')})}
+  try{const rows=await syncRel();if(rows){await syncMsgs(rows);await syncGroups();if(Date.now()-ST>9000){ST=Date.now();await syncStories(rows)}}}catch(e){console.warn('GoodHi sync',e)}finally{syBusy=false}
 }
 const EJ=GHC.emailjs&&GHC.emailjs.serviceId&&!/YOUR_/.test(GHC.emailjs.serviceId)?GHC.emailjs:null;
 async function mailCode(to,code){
@@ -732,7 +900,7 @@ function devPoll(force){
 function endSession(msg){
   const u=me();
   try{const p=JSON.parse(localStorage.gh7ps||'null');if(p&&p.uid===meId())localStorage.removeItem('gh7ps')}catch{}
-  if(u&&DB)cput(devPath(u),null);
+  if(u&&DB){cput(devPath(u),null);pushDrop()}
   sessionStorage.removeItem('gh7s');ui.sheet=null;ui.chat=null;A.step='email';A.err=msg||'';A.fx=true;draw();
 }
 async function devLoad(){
@@ -808,6 +976,9 @@ function authView(){
   return `<div class="aurora"><div class="glass ${pp}">${body}${A.err?`<p class="err">${esc(A.err)}</p>`:''}<p class="hint" style="text-align:center;margin-top:16px">Данные хранятся только в этом браузере.</p></div></div>`;
 }
 function chatRow(c){
+  if(isGrp(c)){const ms=cmsgs(c.id),l=ms[ms.length-1],un=ms.filter(m=>m.from!==meId()&&m.st!=='read').length;
+    const sn=l&&c.type==='group'?(l.from===meId()?'Вы: ':(usr(l.from)?esc(usr(l.from).first)+': ':'')):'';
+    return `<button class="row ${ui.chat===c.id?'on':''}" data-a="open" data-v="${c.id}">${gav(c,52)}<div class="grow"><div style="display:flex;justify-content:space-between;gap:8px"><span class="nm">${esc(c.name)}</span><span class="sb2">${l?hhmm(l.ts):''}</span></div><div style="display:flex;gap:8px"><span class="grow" style="display:flex;align-items:center;gap:5px;min-width:0"><span class="sb2" style="min-width:0">${l?sn+esc(l.t):esc(c.desc||(c.type==='channel'?'Канал':'Группа'))}</span></span>${un?`<span class="badge">${un}</span>`:''}</div></div></button>`}
   const o=other(c),ms=cmsgs(c.id),l=ms[ms.length-1];
   const un=ms.filter(m=>m.from!==meId()&&m.st!=='read').length;
   const name=o?full(o):'Избранное';
@@ -823,7 +994,7 @@ function tabView(){
   if(ui.tab==='feed')return feedView();
   const q=ui.q.trim().toLowerCase();
   if(ui.tab==='chats'){
-    const cs=myChats().sort((a,b)=>(cmsgs(b.id).slice(-1)[0]?.ts||b.id)-(cmsgs(a.id).slice(-1)[0]?.ts||a.id)).filter(c=>{const o=other(c);return !q||(o?full(o):'избранное').toLowerCase().includes(q)});
+    const cs=myChats().sort((a,b)=>(cmsgs(b.id).slice(-1)[0]?.ts||b.id)-(cmsgs(a.id).slice(-1)[0]?.ts||a.id)).filter(c=>{const o=other(c);return !q||(isGrp(c)?c.name:o?full(o):'избранное').toLowerCase().includes(q)});
     const bare=!myChats().length&&!friends().length&&!incoming().length;
     const body=bare?`<div class="empty"><div><b>Здесь пока тихо</b>Найдите друга по @юзернейму и напишите ему.<div style="margin-top:18px;display:flex;flex-direction:column;gap:10px"><button class="pb" data-a="sheet" data-v="find">Найти друга</button><button class="sb" data-a="saved">Открыть «Избранное»</button></div></div></div>`:cs.map(chatRow).join('')+contactsHtml(q);
     return `<div class="top"><h1>Чаты</h1><button class="ib" data-a="sheet" data-v="new" aria-label="Новый чат">${ic('squarePen')}</button></div>${strip()}<div style="padding:0 14px 8px"><input class="inp" id="sq" data-k="q" placeholder="Поиск по чатам и контактам" value="${esc(ui.q)}" style="padding:10px 16px"></div><div class="list">${body}</div>`;
@@ -831,27 +1002,34 @@ function tabView(){
   const u=me();
   const seg=(k,o)=>`<div class="seg" style="grid-template-columns:repeat(${o.length},1fr)">${o.map(([v,l,i])=>`<button class="${cfg[k]===v?'on':''}" data-a="cfg" data-k="${k}" data-v="${v}">${i?ic(i,15):''}${l}</button>`).join('')}</div>`;
   const tg=(k,l,sub)=>`<button class="tg" data-a="tg" data-v="${k}"><span><b>${l}</b><small>${sub}</small></span><span class="sw ${cfg[k]?'on':''}"><i></i></span></button>`;
-  return `<div class="top"><h1>Настройки</h1></div><div class="list" style="padding:4px 14px 14px;display:flex;flex-direction:column;gap:14px"><button class="row" style="background:var(--soft);padding:16px;gap:16px;border-radius:24px" data-a="sheet" data-v="profile">${av(u,68)}<div class="grow"><div class="nm" style="font-size:18px">${N(u)}</div><div class="sb2">@${esc(u.un)} · ${esc(u.email)}</div><div style="color:var(--ind);font-size:12px;font-weight:800;margin-top:2px">Изменить профиль</div></div><span style="color:var(--mut)">${ic('chevron')}</span></button><button class="row shoprow pl" data-a="sheet" data-v="shop"><span class="shopic">${ic('crown',22)}</span><div class="grow"><div class="nm">Магазин</div><div class="sb2">${u.plus?'Good Plus активен':'Good Plus: стикеры, цвет ника, баннеры'}</div></div><span style="color:var(--mut)">${ic('chevron')}</span></button><section class="card"><h3>Внешний вид</h3>${seg('theme',[['light','Светлая','sun'],['dark','Тёмная','moon'],['system','Авто','monitor']])}<div style="height:12px"></div><div style="font-size:12px;font-weight:800;color:var(--mut);margin-bottom:6px">Размер шрифта</div>${seg('fs',[[14,'Мелкий'],[16,'Обычный'],[18,'Крупный']])}<button class="sb" style="margin-top:14px" data-a="sheet" data-v="theme">${ic('sparkles',16)}Свой дизайн</button></section><section class="card"><h3>Уведомления</h3>${tg('on','Уведомления','Всплывающие карточки о новых сообщениях')}${tg('sound','Звуки','Сигнал при отправке и уведомлениях')}${tg('preview','Текст в уведомлении','Если выключить, текст будет скрыт')}<button class="sb" style="margin-top:10px" data-a="testn">Показать тестовое уведомление</button></section><section class="card"><h3>Приложение</h3>${isApp()?'<p class="hint">GoodHi уже установлен как приложение.</p>':IP?'<button class="sb" data-a="install">Установить приложение</button><p class="hint" style="margin-top:8px">Откроется отдельным окном без адресной строки, с иконкой на главном экране.</p>':`<p class="hint">${/iphone|ipad|ipod/i.test(navigator.userAgent)?'iPhone и iPad: откройте сайт в Safari, нажмите «Поделиться» и выберите «На экран „Домой“».':'Откройте меню браузера (⋮) и выберите «Установить приложение» или «Добавить на главный экран».'}</p>`}</section><section class="card"><h3>Голосовые и кружки</h3><div style="font-size:12px;font-weight:800;color:var(--mut);margin-bottom:6px">Кнопка записи в чате</div><div class="vm2"><button class="${cfg.vm!=='vnote'?'on':''}" data-a="vmode" data-v="voice">${ic('mic',18)}Голосовое</button><button class="${cfg.vm==='vnote'?'on':''}" data-a="vmode" data-v="vnote">${ic('video',18)}Кружок</button></div><div style="font-size:12px;font-weight:800;color:var(--mut);margin-bottom:6px">Форма кружков</div><div class="shgrid">${SHAPES.map(([k,l])=>`<button class="shb ${shapeOk(cfg.vs)===k?'on':''}" data-a="vshape" data-v="${k}"><span class="shpv shp-${k}"></span><small>${l}</small></button>`).join('')}</div><p class="hint" style="margin-top:10px">В чате нажмите на кнопку записи, чтобы переключить голосовое и кружок. Удерживайте её для записи: влево — отмена, вверх — закрепить запись. Форма кружка сохраняется в сообщении, друг увидит такую же.</p></section><button class="row" style="background:var(--soft);border-radius:20px;padding:14px 16px" data-a="devopen"><span class="ib" style="flex:none;background:var(--card)">${ic('monitor',22)}</span><div class="grow"><div class="nm">Устройства</div><div class="sb2">Где выполнен вход в аккаунт</div></div><span style="color:var(--mut)">${ic('chevron')}</span></button><button class="sb rd" data-a="sheet" data-v="logout">${ic('logOut',18)}Выйти из аккаунта</button></div>`;
+  return `<div class="top"><h1>Настройки</h1></div><div class="list" style="padding:4px 14px 14px;display:flex;flex-direction:column;gap:14px"><button class="row" style="background:var(--soft);padding:16px;gap:16px;border-radius:24px" data-a="sheet" data-v="profile">${av(u,68)}<div class="grow"><div class="nm" style="font-size:18px">${N(u)}</div><div class="sb2">@${esc(u.un)} · ${esc(u.email)}</div><div style="color:var(--ind);font-size:12px;font-weight:800;margin-top:2px">Изменить профиль</div></div><span style="color:var(--mut)">${ic('chevron')}</span></button><button class="row shoprow pl" data-a="sheet" data-v="shop"><span class="shopic">${ic('crown',22)}</span><div class="grow"><div class="nm">Магазин</div><div class="sb2">${u.plus?'Good Plus активен':'Good Plus: стикеры, цвет ника, баннеры'}</div></div><span style="color:var(--mut)">${ic('chevron')}</span></button><section class="card"><h3>Внешний вид</h3>${seg('theme',[['light','Светлая','sun'],['dark','Тёмная','moon'],['system','Авто','monitor']])}<div style="height:12px"></div><div style="font-size:12px;font-weight:800;color:var(--mut);margin-bottom:6px">Размер шрифта</div>${seg('fs',[[14,'Мелкий'],[16,'Обычный'],[18,'Крупный']])}<button class="sb" style="margin-top:14px" data-a="sheet" data-v="theme">${ic('sparkles',16)}Свой дизайн</button></section><section class="card"><h3>Уведомления</h3>${tg('on','Уведомления','Всплывающие карточки о новых сообщениях')}${tg('sound','Звуки','Сигнал при отправке и уведомлениях')}${tg('preview','Текст в уведомлении','Если выключить, текст будет скрыт')}<button class="sb" style="margin-top:10px" data-a="testn">Показать тестовое уведомление</button></section><section class="card"><h3>Push-уведомления</h3>${(()=>{const iosNo=/iphone|ipad|ipod/i.test(navigator.userAgent)&&!isApp();
+  if(!VAPID)return '<p class="hint">Сервер уведомлений ещё не подключён (см. инструкцию в README).</p>';
+  if(iosNo)return '<p class="hint">На iPhone и iPad уведомления работают только в установленном приложении: добавьте GoodHi на экран «Домой» и откройте его оттуда.</p>';
+  if(!('PushManager' in window)||!('Notification' in window))return '<p class="hint">Этот браузер не поддерживает push-уведомления.</p>';
+  if(Notification.permission==='denied')return '<p class="hint">Уведомления запрещены для сайта. Разрешите их в настройках браузера (значок замка рядом с адресом) и обновите страницу.</p>';
+  if(Notification.permission==='granted'&&LSK('gh7pk','null'))return '<p class="hint" style="margin-bottom:10px">Включены: сообщения и заявки в друзья приходят, даже когда GoodHi закрыт.</p><div class="vm2" style="margin:0"><button data-a="pushtest">Проверить</button><button data-a="pushoff">Выключить</button></div>';
+  return '<button class="sb" data-a="pushon">Включить push-уведомления</button><p class="hint" style="margin-top:8px">Вам будет приходить уведомление, когда кто-то пишет, даже если GoodHi закрыт.</p>';})()}</section><section class="card"><h3>Приложение</h3>${isApp()?'<p class="hint">GoodHi уже установлен как приложение.</p>':IP?'<button class="sb" data-a="install">Установить приложение</button><p class="hint" style="margin-top:8px">Откроется отдельным окном без адресной строки, с иконкой на главном экране.</p>':`<p class="hint">${/iphone|ipad|ipod/i.test(navigator.userAgent)?'iPhone и iPad: откройте сайт в Safari, нажмите «Поделиться» и выберите «На экран „Домой“».':'Откройте меню браузера (⋮) и выберите «Установить приложение» или «Добавить на главный экран».'}</p>`}</section><section class="card"><h3>Голосовые и кружки</h3><div style="font-size:12px;font-weight:800;color:var(--mut);margin-bottom:6px">Кнопка записи в чате</div><div class="vm2"><button class="${cfg.vm!=='vnote'?'on':''}" data-a="vmode" data-v="voice">${ic('mic',18)}Голосовое</button><button class="${cfg.vm==='vnote'?'on':''}" data-a="vmode" data-v="vnote">${ic('video',18)}Кружок</button></div><div style="font-size:12px;font-weight:800;color:var(--mut);margin-bottom:6px">Форма кружков</div><div class="shgrid">${SHAPES.map(([k,l])=>`<button class="shb ${shapeOk(cfg.vs)===k?'on':''}" data-a="vshape" data-v="${k}"><span class="shpv shp-${k}"></span><small>${l}</small></button>`).join('')}</div><p class="hint" style="margin-top:10px">В чате нажмите на кнопку записи, чтобы переключить голосовое и кружок. Удерживайте её для записи: влево — отмена, вверх — закрепить запись. Форма кружка сохраняется в сообщении, друг увидит такую же.</p></section><button class="row" style="background:var(--soft);border-radius:20px;padding:14px 16px" data-a="devopen"><span class="ib" style="flex:none;background:var(--card)">${ic('monitor',22)}</span><div class="grow"><div class="nm">Устройства</div><div class="sb2">Где выполнен вход в аккаунт</div></div><span style="color:var(--mut)">${ic('chevron')}</span></button><button class="sb rd" data-a="sheet" data-v="logout">${ic('logOut',18)}Выйти из аккаунта</button></div>`;
 }
 function chatView(){
   const c=D.c.find(x=>x.id===ui.chat);
   if(!c)return `<div class="empty"><div>${LOGO(72)}<b>Привет, ${esc(me().first)}!</b>Выберите чат слева или найдите друга по @юзернейму.</div></div>`;
-  const o=other(c),ms=cmsgs(c.id),u=me();
+  const o=other(c),ms=cmsgs(c.id),u=me(),G=isGrp(c);
   const bub=m=>{
-    const mine=m.from===meId(),f=shown.has(m.id)?'':' fresh',tm=`<i>${hhmm(m.ts)}${mine?TK(m.st):''}</i>`;
+    const mine=m.from===meId(),f=shown.has(m.id)?'':' fresh',tm=`<i>${hhmm(m.ts)}${mine&&!G?TK(m.st):''}</i>`,gn=G&&!mine&&c.type==='group'?`<span class="gsn">${esc(usr(m.from)?full(usr(m.from)):'Участник')}</span>`:'';
     if(m.k==='call')return `<div class="sysm${f}">${ic('phone',14)}<span>${esc(m.t)}</span><time>${hhmm(m.ts)}</time></div>`;
     if(m.k==='img'){const ar=m.w&&m.h?`aspect-ratio:${m.w}/${m.h};`:'min-height:140px;';return `<div class="m ${mine?'out':'in'} ph${f}"><img class="pimg" data-fid="${m.fid}" data-a="viewimg" data-v="${m.fid}" alt="${esc(m.name)}" style="${ar}">${tm}</div>`}
     if(m.k==='file')return `<div class="m ${mine?'out':'in'}${f}"><button class="fcard" data-a="dl" data-v="${m.fid}"><span class="fi">${ic('file',22)}</span><span class="fn"><b>${esc(m.name)}</b><small>${fsz(m.size)}</small></span><span class="fd">${ic('download',18)}</span></button>${tm}</div>`;
-    if(m.k==='voice')return `<div class="m ${mine?'out':'in'}${f}"><div class="vcard" data-vp="${m.id}"><button class="vpb" data-a="vplay" data-v="${m.id}" aria-label="Воспроизвести">${ic('play',20,'currentColor')}</button><div class="vwf">${vbars(m)}</div><div class="vmeta"><span class="vt">${mmss(m.dur)}</span><span class="vspd" data-a="vspd" role="button">${VR}×</span></div></div>${tm}</div>`;
-    if(m.k==='vnote')return `<div class="m ${mine?'out':'in'} vn${f}"><div class="vnm shp-${shapeOk(m.sh)}" data-a="vnplay" data-v="${m.id}" role="button" aria-label="Смотреть кружок">${m.th?`<img src="${esc(m.th)}" alt="">`:''}<span class="pl">${ic('play',34,'currentColor')}</span><span class="vd">${mmss(m.dur)}</span></div>${tm}</div>`;
+    if(m.k==='voice')return `<div class="m ${mine?'out':'in'}${f}">${gn}<div class="vcard" data-vp="${m.id}"><button class="vpb" data-a="vplay" data-v="${m.id}" aria-label="Воспроизвести">${ic('play',20,'currentColor')}</button><div class="vwf">${vbars(m)}</div><div class="vmeta"><span class="vt">${mmss(m.dur)}</span><span class="vspd" data-a="vspd" role="button">${VR}×</span></div></div>${tm}</div>`;
+    if(m.k==='vnote')return `<div class="m ${mine?'out':'in'} vn${f}">${gn}<div class="vnm shp-${shapeOk(m.sh)}" data-a="vnplay" data-v="${m.id}" role="button" aria-label="Смотреть кружок">${m.th?`<img src="${esc(m.th)}" alt="">`:''}<span class="pl">${ic('play',34,'currentColor')}</span><span class="vd">${mmss(m.dur)}</span></div>${tm}</div>`;
     if(m.k==='st'){const st=D.stk[m.sid];return `<div class="m ${mine?'out':'in'} st${f}">${st?`<img src="${st.img}" alt="Стикер">`:'<span class="sb2">Стикер удалён</span>'}${tm}</div>`}
-    return `<div class="m ${mine?'out':'in'}${f}">${esc(m.t)}${tm}</div>`;
+    return `<div class="m ${mine?'out':'in'}${f}">${gn}${esc(m.t)}${tm}</div>`;
   };
   const att=ui.att?`<div class="att ${FX.tray?'in':''}"><button data-a="pickph">${ic('image',20)}Фото</button><button data-a="pickfl">${ic('file',20)}Файл · до 100 МБ</button></div>`:'';
   const my=Object.values(D.stk).filter(x=>x.owner===meId());
   const tray=ui.tray?`<div class="tray ${FX.tray?'in':''}">${u.plus?`<div class="tgrid">${my.map(x=>`<div class="stk"><button data-a="sendstk" data-v="${x.id}" aria-label="Отправить стикер"><img src="${x.img}" alt=""></button><span class="x" data-a="delstk" data-v="${x.id}" role="button" aria-label="Удалить">${ic('x',12)}</span></div>`).join('')}<button class="stk add" data-a="addstk" aria-label="Создать стикер">${ic('plus',26)}</button></div><input id="sf" type="file" accept="image/*" hidden>${my.length?'':'<p class="hint" style="text-align:center;margin-top:8px">Создайте первый стикер из любой картинки.</p>'}`:`<div class="lock">${ic('lock',24)}<b>Свои стикеры: в Good Plus</b><span class="hint">Создавайте стикеры из своих картинок и отправляйте друзьям.</span><button class="pb pl" style="max-width:260px" data-a="sheet" data-v="shop">${ic('sparkles',18)}Открыть магазин</button></div>`}</div>`:'';
-  const head=o?`<button class="who" data-a="uprof" data-v="${o.id}">${av(o,42)}<span><span class="nm" style="font-weight:800;display:block">${N(o)}</span><span class="sb2" style="font-size:12px;color:var(--mut);display:block">@${esc(o.un)} · профиль</span></span></button>`:`<div class="av" style="width:42px;height:42px;background:linear-gradient(135deg,${GR[4]})">${ic('bookmark',22)}</div><div><div class="nm" style="font-weight:800">Избранное</div><div class="sb2" style="font-size:12px;color:var(--mut)">заметки для себя</div></div>`;
-  return `<div class="chead"><button class="ib back" data-a="back" aria-label="Назад">${ic('arrowLeft')}</button>${head}${o?`<span style="margin-left:auto;display:flex;gap:4px"><button class="ib sm" data-a="call" data-v="a" aria-label="Позвонить">${ic('phone',18)}</button><button class="ib sm" data-a="call" data-v="v" aria-label="Видеозвонок">${ic('video',18)}</button></span>`:''}</div><div class="msgs" id="msgs">${ms.length?ms.map(bub).join(''):`<div class="empty" style="font-size:14px">Сообщений пока нет. Напишите первое!</div>`}</div>${tray}${att}<div class="comp"><button class="ib" data-a="stk" aria-label="Стикеры" style="flex:none">${ic('smile')}</button><button class="ib" data-a="att" aria-label="Прикрепить" style="flex:none">${ic('paperclip')}</button><input id="ph" type="file" accept="image/*" multiple hidden><input id="fl" type="file" multiple hidden><input class="inp" id="cin" placeholder="Сообщение" autocomplete="off"><button class="send" data-a="send" aria-label="Отправить">${ic('arrowUp',20)}</button><button class="ib recb" data-rec="1" aria-label="Записать: удерживайте. Нажмите, чтобы переключить голосовое и кружок">${ic(cfg.vm==='vnote'?'video':'mic',22)}</button></div>`;
+const COMP=!canPost(c)?`<div class="comp ro">${c.type==='channel'?'Писать в канал могут только администраторы':'Вы больше не участник'}</div>`:`<div class="comp">${G?'':`<button class="ib" data-a="stk" aria-label="Стикеры" style="flex:none">${ic('smile')}</button><button class="ib" data-a="att" aria-label="Прикрепить" style="flex:none">${ic('paperclip')}</button><input id="ph" type="file" accept="image/*" multiple hidden><input id="fl" type="file" multiple hidden>`}<input class="inp" id="cin" placeholder="Сообщение" autocomplete="off"><button class="send" data-a="send" aria-label="Отправить">${ic('arrowUp',20)}</button><button class="ib recb" data-rec="1" aria-label="Записать: удерживайте. Нажмите, чтобы переключить голосовое и кружок">${ic(cfg.vm==='vnote'?'video':'mic',22)}</button></div>`;
+  const head=G?`<button class="who" data-a="sheet" data-v="ginfo">${gav(c,42)}<span><span class="nm" style="font-weight:800;display:block">${esc(c.name)}</span><span class="sb2" style="font-size:12px;color:var(--mut);display:block">${gsub(c)}</span></span></button>`:o?`<button class="who" data-a="uprof" data-v="${o.id}">${av(o,42)}<span><span class="nm" style="font-weight:800;display:block">${N(o)}</span><span class="sb2" style="font-size:12px;color:var(--mut);display:block">@${esc(o.un)} · профиль</span></span></button>`:`<div class="av" style="width:42px;height:42px;background:linear-gradient(135deg,${GR[4]})">${ic('bookmark',22)}</div><div><div class="nm" style="font-weight:800">Избранное</div><div class="sb2" style="font-size:12px;color:var(--mut)">заметки для себя</div></div>`;
+  return `<div class="chead"><button class="ib back" data-a="back" aria-label="Назад">${ic('arrowLeft')}</button>${head}${o?`<span style="margin-left:auto;display:flex;gap:4px"><button class="ib sm" data-a="call" data-v="a" aria-label="Позвонить">${ic('phone',18)}</button><button class="ib sm" data-a="call" data-v="v" aria-label="Видеозвонок">${ic('video',18)}</button></span>`:''}</div><div class="msgs" id="msgs">${ms.length?ms.map(bub).join(''):`<div class="empty" style="font-size:14px">Сообщений пока нет. Напишите первое!</div>`}</div>${tray}${att}${COMP}`;
 }
 function sheetView(){
   const s=ui.sheet;if(!s)return '';const fx=FX.sheet?' in':'';let t='',b='';const u=me();
@@ -874,7 +1052,7 @@ function sheetView(){
     const isImg=o.plus&&o.banner&&o.banner.startsWith('data:');
     return `<div class="ov${fx}" data-a="close" data-bg="1"><div class="sheet${fx}"><button class="ib xbtn" data-a="close" aria-label="Закрыть">${ic('x',20)}</button><div class="ubn ${isImg?'':'bn'}" style="${bannerCss(o)}"></div><div class="uhead"><div class="uav">${av(o,92)}</div><div class="uname">${N(o)}</div><div class="sb2 ctr" style="color:var(--mut)">@${esc(o.un)}</div>${o.bio?`<p class="ubio">${esc(o.bio)}</p>`:'<p class="ubio mutd">О себе пока ничего не написано.</p>'}</div><div class="stack">${acts}</div></div></div>`;
   }
-  if(s==='new'){t='Новый чат';b=`<button class="row" data-a="saved"><span class="av" style="width:44px;height:44px;background:linear-gradient(135deg,${GR[4]})">${ic('bookmark',22)}</span><div><div class="nm">Избранное</div><div class="sb2">Заметки для себя</div></div></button>${friends().map(x=>`<button class="row" data-a="msgto" data-v="${x.u.id}">${av(x.u,44)}<div><div class="nm">${N(x.u)}</div><div class="sb2">@${esc(x.u.un)}</div></div></button>`).join('')}<button class="sb" data-a="sheet" data-v="find" style="margin-top:6px">Найти нового друга</button>`}
+  if(s==='new'){t='Новый чат';b=`<button class="row" data-a="gnew" data-v="group"><span class="av" style="width:44px;height:44px;background:linear-gradient(135deg,${GR[1]})">${ic('users',22)}</span><div><div class="nm">Создать группу</div><div class="sb2">Общий чат с друзьями</div></div></button><button class="row" data-a="gnew" data-v="channel"><span class="av" style="width:44px;height:44px;background:linear-gradient(135deg,${GR[3]})">${ic('megaphone',22)}</span><div><div class="nm">Создать канал</div><div class="sb2">Пишете вы, остальные читают</div></div></button><button class="row" data-a="sheet" data-v="gjoin"><span class="av" style="width:44px;height:44px;background:linear-gradient(135deg,${GR[5]})">${ic('link',22)}</span><div><div class="nm">Вступить по коду</div><div class="sb2">Код приглашения или @имя</div></div></button><button class="row" data-a="saved"><span class="av" style="width:44px;height:44px;background:linear-gradient(135deg,${GR[4]})">${ic('bookmark',22)}</span><div><div class="nm">Избранное</div><div class="sb2">Заметки для себя</div></div></button>${friends().map(x=>`<button class="row" data-a="msgto" data-v="${x.u.id}">${av(x.u,44)}<div><div class="nm">${N(x.u)}</div><div class="sb2">@${esc(x.u.un)}</div></div></button>`).join('')}<button class="sb" data-a="sheet" data-v="find" style="margin-top:6px">Найти нового друга</button>`}
   if(s==='find'){t='Найти друга';const q=ui.fq.trim().toLowerCase().replace(/^@/,'');const res=q.length<2?null:D.u.filter(x=>x.id!==meId()&&(x.un.startsWith(q)||x.email===q)).slice(0,10);
     b=`<input class="inp" id="fq" data-k="fq" placeholder="точный @юзернейм или почта" value="${esc(ui.fq)}" autocomplete="off"><p class="hint" style="margin:8px 0">Добавить можно только настоящих людей, зарегистрированных в GoodHi.</p>${res&&!res.length?'<p class="hint" style="text-align:center;padding:14px">Никого не нашли. Человек должен быть зарегистрирован.</p>':''}${(res||[]).map(x=>{const r=rel(x.id);return `<div class="req" style="background:var(--soft)"><span data-a="uprof" data-v="${x.id}" style="cursor:pointer">${av(x,44)}</span><div class="grow"><div class="nm">${N(x)}</div><div class="sb2">@${esc(x.un)}</div></div><button class="pill ${r==='friend'||r==='sent'?'ok':''}" ${r==='friend'||r==='sent'?'disabled':''} data-a="add" data-v="${x.id}">${{none:'Добавить',friend:'Уже друзья',sent:'Заявка отправлена',incoming:'Принять'}[r]}</button></div>`}).join('')}`}
   if(s==='shop'){t='Магазин';
@@ -918,6 +1096,14 @@ function sheetView(){
   if(s==='report'){const r=ui.rp;const o=r&&usr(r.uid);if(!o)return '';t='Пожаловаться';
     b=`<p class="hint" style="margin-bottom:12px;font-size:14px">Жалоба на <b>${esc(full(o))}</b> (@${esc(o.un)}) уйдёт администраторам. Пользователь об этом не узнает.</p><div class="stack">${REASONS.map(x=>`<button class="${r.reason===x?'pb':'sb'}" data-a="rrs" data-v="${x}">${x}</button>`).join('')}<input class="inp" id="rtx" data-r="text" maxlength="300" placeholder="Подробности (необязательно)" autocomplete="off">${chatSnap(r.uid).length?`<button class="tg" data-a="rattach"><span><b>Приложить переписку</b><small>Последние сообщения вашего диалога увидит только администратор</small></span><span class="sw ${r.attach!==false?'on':''}"><i></i></span></button>`:''}<button class="pb dg" data-a="rsend" ${r.reason?'':'disabled style="opacity:.45"'}>Отправить жалобу</button></div>`}
   if(s==='logout'){t='Выйти из аккаунта?';b=`<p class="hint" style="margin-bottom:12px;font-size:14px">Вы сможете войти снова по коду из письма. Чаты сохранятся.</p><div class="stack"><button class="pb dg" data-a="dologout">Выйти</button><button class="gb" data-a="close">Отмена</button></div>`}
+  if(s==='newgrp'){const d=ui.gd||(ui.gd={t:'group',name:'',desc:'',h:'',pick:[],err:'',busy:false}),ch=d.t==='channel';t=ch?'Новый канал':'Новая группа';
+    b=`<input class="inp" id="gname" data-g="name" maxlength="60" placeholder="${ch?'Название канала':'Название группы'}" value="${esc(d.name)}" autocomplete="off"><input class="inp" id="gdesc" data-g="desc" maxlength="300" placeholder="Описание (необязательно)" value="${esc(d.desc)}" style="margin-top:8px" autocomplete="off"><input class="inp" id="ghnd" data-g="h" maxlength="21" placeholder="Публичное @имя (необязательно)" value="${esc(d.h)}" style="margin-top:8px" autocomplete="off" autocapitalize="off"><p class="hint" style="margin:8px 0">${ch?'Подписчики только читают: писать можете вы и назначенные администраторы.':'В группе писать могут все участники.'} Остальных можно пригласить по коду.</p><div class="sec">${ch?'ПОДПИСЧИКИ':'УЧАСТНИКИ'}</div>${friends().length?friends().map(x=>{const on=d.pick.includes(x.u.id);return `<button class="row" data-a="gpick" data-v="${x.u.id}">${av(x.u,40)}<div class="grow"><div class="nm">${N(x.u)}</div><div class="sb2">@${esc(x.u.un)}</div></div><span class="gck ${on?'on':''}">${on?ic('check',16):''}</span></button>`}).join(''):'<p class="hint" style="text-align:center;padding:10px">Друзей пока нет. Пригласите людей позже по коду.</p>'}${d.err?`<p class="hint" style="color:#ef4444;margin-top:8px">${esc(d.err)}</p>`:''}<button class="pb" data-a="gmake" style="margin-top:12px" ${d.busy?'disabled':''}>${d.busy?'Создаём…':'Создать'}</button>`}
+  if(s==='gjoin'){const d=ui.gd||(ui.gd={code:'',err:''});t='Вступить по коду';
+    b=`<input class="inp" id="gcode" data-g="code" placeholder="Код приглашения или @имя" value="${esc(d.code||'')}" autocomplete="off" autocapitalize="off"><p class="hint" style="margin:8px 0">Код приглашения есть в информации о группе или канале. Можно вставить и ссылку-приглашение.</p>${d.err?`<p class="hint" style="color:#ef4444;margin-bottom:8px">${esc(d.err)}</p>`:''}<button class="pb" data-a="gdojoin" ${d.busy?'disabled':''}>${d.busy?'Вступаем…':'Вступить'}</button>`}
+  if(s==='ginfo'){const c=D.c.find(x=>x.id===ui.chat);if(!c||!isGrp(c))return '';const my=gMy(c),adm=canAdmin(c),own=my==='o',ch=c.type==='channel',what=ch?'канал':'группу';t=ch?'Канал':'Группа';
+    const mem=c.m.map(id=>usr(id)).filter(Boolean).sort((x,y)=>{const r={o:0,a:1,m:2};return (r[c.roles[ek(x.email)]||'m']-r[c.roles[ek(y.email)]||'m'])||full(x).localeCompare(full(y))});
+    const fr=adm?friends().filter(x=>!c.m.includes(x.u.id)):[];
+    b=`<div style="display:flex;gap:14px;align-items:center;margin-bottom:12px">${gav(c,72)}<div class="grow"><div class="nm" style="font-size:18px;font-weight:800">${esc(c.name)}</div><div class="sb2">${gsub(c)}${c.h?` · @${esc(c.h)}`:''}</div></div></div>${c.desc?`<p class="hint" style="margin-bottom:12px;font-size:14px">${esc(c.desc)}</p>`:''}${adm?`<div class="sec">НАСТРОЙКИ</div><input class="inp" id="gen" maxlength="60" value="${esc(c.name)}" placeholder="Название"><input class="inp" id="ged" maxlength="300" value="${esc(c.desc||'')}" placeholder="Описание" style="margin-top:8px"><div style="display:flex;gap:8px;margin-top:8px"><button class="sb" style="flex:1" data-a="gsave">Сохранить</button><button class="sb" style="flex:1" data-a="gavpick">Сменить фото</button></div><input id="gavf" type="file" accept="image/*" hidden>`:''}<div class="sec">ПРИГЛАШЕНИЕ</div><div class="gcode"><span class="grow">${esc(c.code)}</span><button class="ib" style="width:36px;height:36px" data-a="gcopy" data-v="code" aria-label="Скопировать код">${ic('copy',18)}</button><button class="ib" style="width:36px;height:36px" data-a="gcopy" data-v="link" aria-label="Скопировать ссылку">${ic('link',18)}</button></div><div class="sec">${ch?'ПОДПИСЧИКИ':'УЧАСТНИКИ'} · ${mem.length}</div>${mem.map(x=>{const k=ek(x.email),r=c.roles[k]||'m',canRm=x.id!==meId()&&r!=='o'&&(own||(adm&&r==='m'));return `<div class="req" style="background:var(--soft)"><span data-a="uprof" data-v="${x.id}" style="cursor:pointer">${av(x,40)}</span><div class="grow"><div class="nm">${N(x)}${x.id===meId()?' (вы)':''}</div><div class="sb2">${r==='o'?'Владелец':r==='a'?'Админ':'@'+esc(x.un)}</div></div>${own&&r!=='o'?`<button class="pill ${r==='a'?'ok':''}" data-a="grole" data-v="${esc(k)}">${r==='a'?'Снять админа':'Админ'}</button>`:''}${canRm?`<button class="ib" style="width:34px;height:34px;color:var(--mut)" data-a="grm" data-v="${esc(k)}" aria-label="Убрать">${ic('x',18)}</button>`:''}</div>`}).join('')}${fr.length?`<div class="sec">ДОБАВИТЬ ДРУЗЕЙ</div>${fr.map(x=>`<div class="req" style="background:var(--soft)">${av(x.u,40)}<div class="grow"><div class="nm">${N(x.u)}</div><div class="sb2">@${esc(x.u.un)}</div></div><button class="pill" data-a="gadd" data-v="${x.u.id}">Добавить</button></div>`).join('')}`:''}${own?`<button class="sb" style="margin-top:14px;color:#ef4444" data-a="gdel">Удалить ${what} для всех</button>`:`<button class="sb" style="margin-top:14px;color:#ef4444" data-a="gleave">Покинуть ${what}</button>`}`}
   return `<div class="ov${fx}" data-a="close" data-bg="1"><div class="sheet${fx}" data-stop="1"><h2>${t}<button class="ib" style="width:34px;height:34px;color:var(--tx)" data-a="close" aria-label="Закрыть">${ic('x',20)}</button></h2>${b}</div></div>`;
 }
 function mainView(){
@@ -1010,6 +1196,7 @@ window.addEventListener('pointermove',e=>{if(!RP.down)return;RP.dx=e.clientX-RP.
   recStop(!(ev==='pointercancel'||RP.dx<-90))}));
 async function recStart(mode){
   if(!ui.chat||REC)return;
+  {const c0=D.c.find(x=>x.id===ui.chat);if(c0&&!canPost(c0))return}
   if(!window.MediaRecorder||!navigator.mediaDevices){return toast('Запись не поддерживается','Откройте сайт в современном браузере (Chrome, Safari, Firefox)')}
   const cid=ui.chat;RP.pend=true;let stream;
   try{stream=await navigator.mediaDevices.getUserMedia(mode==='vnote'?{audio:{echoCancellation:true,noiseSuppression:true},video:{facingMode:'user',width:{ideal:480},height:{ideal:480},frameRate:{ideal:24}}}:{audio:{echoCancellation:true,noiseSuppression:true}})}
@@ -1072,6 +1259,31 @@ async function vnOpen(id){
   o.onclick=e=>{if(e.target.closest('.vnw')){v.paused?v.play().catch(()=>{}):v.pause()}else vnClose()};
   v.play().catch(()=>{});
 }
+try{const q=new URLSearchParams(location.search).get('join');if(q){sessionStorage.ghJ=q;history.replaceState(null,'',location.pathname)}}catch{}
+/* ---------- push-уведомления ---------- */
+const VAPID=(GHC.push&&GHC.push.vapid)||'';let PUSHDONE=false;
+const vapidKey=t=>{const b=atob((t+'='.repeat((4-t.length%4)%4)).replace(/-/g,'+').replace(/_/g,'/')),a=new Uint8Array(b.length);for(let i=0;i<b.length;i++)a[i]=b.charCodeAt(i);return a};
+const pushSupported=()=>!!VAPID&&!!DB&&'serviceWorker' in navigator&&'PushManager' in window&&'Notification' in window;
+const subId=sub=>hash7(sub.endpoint)+hash7([...sub.endpoint].reverse().join(''));
+async function pushOn(ask){
+  if(!pushSupported()||!meId())return false;
+  let perm=Notification.permission;
+  if(perm==='default'&&ask)perm=await Notification.requestPermission();
+  if(perm!=='granted')return false;
+  try{
+    const reg=await navigator.serviceWorker.ready;let sub=await reg.pushManager.getSubscription();
+    if(!sub)sub=await reg.pushManager.subscribe({userVisibleOnly:true,applicationServerKey:vapidKey(VAPID)});
+    const k=ek(me().email),id=subId(sub);
+    const ok=await cput(`push/${k}/${id}`,{sub:sub.toJSON(),pv:!!cfg.preview,ts:Date.now()});
+    if(ok)lsSet('gh7pk',{k,id});
+    return ok;
+  }catch(e){console.warn('push',e);return false}
+}
+async function pushDrop(){const r=LSK('gh7pk','null');PUSHDONE=false;lsSet('gh7pk',null);if(r&&DB)cput(`push/${r.k}/${r.id}`,null)}
+async function pushTest(){
+  try{const reg=await navigator.serviceWorker.ready;await reg.showNotification('GoodHi',{body:'Так будут выглядеть уведомления',icon:'icon-192.png',tag:'test'})}
+  catch{toast('Не получилось','Разрешите уведомления для сайта в настройках браузера')}
+}
 /* ---------- установка как приложение (PWA) ---------- */
 let IP=null;
 const isApp=()=>{try{return matchMedia('(display-mode: standalone)').matches||navigator.standalone===true}catch{return false}};
@@ -1090,7 +1302,7 @@ document.addEventListener('click',e=>{
   else if(a==='tab'){const T=['chats','feed','settings'],o=T.indexOf(ui.tab),n=T.indexOf(v);if(o===n)return;ui.fx={tab:n>o?'r':'l'};ui.tab=v;ui.q='';draw()}
   else if(a==='open'){ui.chat=+v;ui.fx={pane:'open'};draw()}
   else if(a==='back')closeChat();
-  else if(a==='sheet'){ui.sheet=v;ui.fq='';ui.perr='';ui.fx={sheet:1};if(v==='profile'){const u=me();ui.pd={first:u.first,last:u.last,un:u.un,bio:u.bio||'',email:u.email,g:u.g,photo:u.photo,nick:u.nick||'',banner:u.banner||null}}draw()}
+  else if(a==='sheet'){ui.sheet=v;ui.fq='';ui.perr='';if(v==='gjoin')ui.gd={code:'',err:'',busy:false};ui.fx={sheet:1};if(v==='profile'){const u=me();ui.pd={first:u.first,last:u.last,un:u.un,bio:u.bio||'',email:u.email,g:u.g,photo:u.photo,nick:u.nick||'',banner:u.banner||null}}draw()}
   else if(a==='close')closeSheet();
   else if(a==='add'){const uid=+v,r0=rel(uid);mut(()=>{const r=rel(uid);if(r==='none')D.f.push({id:D.n++,a:meId(),b:uid,st:'p'});else if(r==='incoming'){D.f.find(f=>f.a===uid&&f.b===meId()).st='a'}});if(r0==='none')relUp(uid,'p');else if(r0==='incoming')relUp(uid,'a')}
   else if(a==='acc'){const f0=D.f.find(f=>f.id===+v&&f.b===meId());mut(()=>{const f=D.f.find(f=>f.id===+v&&f.b===meId());if(f)f.st='a'});if(f0)relUp(f0.a,'a')}
@@ -1156,10 +1368,25 @@ document.addEventListener('click',e=>{
   else if(a==='delstk')mut(()=>{const x=D.stk[v];if(x&&x.owner===meId())delete D.stk[v]});
   else if(a==='sendstk'){const cid=ui.chat;lastCount=-1;mut(()=>{const c=D.c.find(c=>c.id===cid);if(!c||!c.m.includes(meId()))return;D.m.push({id:D.n++,cid,from:meId(),k:'st',sid:v,t:'Стикер',ts:Date.now(),st:c.type==='saved'?'read':'sent'})});if(cfg.sound)beep()}
   else if(a==='cfg'){cfg[el.dataset.k]=el.dataset.k==='fs'?+v:v;saveCfg();applyCfg();draw()}
-  else if(a==='tg'){cfg[v]=!cfg[v];saveCfg();draw()}
+  else if(a==='tg'){cfg[v]=!cfg[v];saveCfg();draw();if(v==='preview')pushOn(false)}
   else if(a==='testn'){if(!cfg.on)toast('Уведомления выключены','Включите их, чтобы проверить');else{toast('GoodHi',cfg.preview?'Так будет выглядеть новое сообщение':'Новое сообщение');if(cfg.sound)beep()}}
   else if(a==='saved')mut(()=>{let c=D.c.find(c=>c.type==='saved'&&c.m[0]===meId());if(!c){c={id:D.n++,type:'saved',m:[meId()]};D.c.push(c)}ui.tab='chats';ui.chat=c.id;ui.sheet=null;ui.fx={pane:'open'}});
   else if(a==='send')sendMsg();
+  else if(a==='gnew'){ui.gd={t:v==='channel'?'channel':'group',name:'',desc:'',h:'',pick:[],err:'',busy:false};ui.sheet='newgrp';ui.fx={sheet:1};draw()}
+  else if(a==='gpick'){const d=ui.gd,id=+v,i=d.pick.indexOf(id);if(i<0)d.pick.push(id);else d.pick.splice(i,1);draw()}
+  else if(a==='gmake'){const d=ui.gd;if(!d||d.busy)return;d.busy=true;d.err='';draw();gCreate(d).then(r=>{d.busy=false;if(r.err){d.err=r.err;return draw()}ui.gd=null;ui.sheet=null;ui.tab='chats';ui.chat=r.cid;ui.fx={pane:'open'};draw();cloudSync(true)})}
+  else if(a==='gdojoin'){const d=ui.gd;if(!d||d.busy)return;d.busy=true;d.err='';draw();gJoin(d.code).then(r=>{d.busy=false;if(r.err){d.err=r.err;return draw()}ui.gd=null;ui.sheet=null;ui.tab='chats';ui.chat=r.cid;ui.fx={pane:'open'};draw()})}
+  else if(a==='gsave'){const n=gclip($('#gen')&&$('#gen').value,60);if(!n)return toast('Введите название','Название не может быть пустым');gEdit(ui.chat,{name:n,desc:gclip($('#ged')&&$('#ged').value,300)}).then(()=>{toast('Сохранено','Изменения увидят все участники');draw()})}
+  else if(a==='gavpick'){const f=$('#gavf');if(f)f.click()}
+  else if(a==='gadd')gAdd(ui.chat,[+v]).then(draw);
+  else if(a==='grm')gRemove(ui.chat,v).then(draw);
+  else if(a==='grole')gSetRole(ui.chat,v).then(draw);
+  else if(a==='gleave'){if(confirm('Покинуть? Вернуться можно только по приглашению.'))gLeave(ui.chat).then(ok=>{if(ok){ui.sheet=null;ui.chat=null;ui.fx={pane:'list'};draw()}else toast('Не получилось','Владелец не может выйти: удалите группу или передайте права')})}
+  else if(a==='gdel'){if(confirm('Удалить для всех участников? Это нельзя отменить.'))gDelete(ui.chat).then(ok=>{if(ok){ui.sheet=null;ui.chat=null;ui.fx={pane:'list'};draw()}else toast('Не получилось','Проверьте соединение и попробуйте ещё раз')})}
+  else if(a==='gcopy'){const c=D.c.find(x=>x.id===ui.chat);if(!c)return;const txt=v==='link'?location.origin+location.pathname+'?join='+c.code:c.code;(navigator.clipboard?navigator.clipboard.writeText(txt):Promise.reject()).then(()=>toast('Скопировано',v==='link'?'Ссылка-приглашение':'Код приглашения')).catch(()=>toast('Скопируйте вручную',txt))}
+  else if(a==='pushon'){pushOn(true).then(ok=>{toast(ok?'Уведомления включены':'Не удалось включить',ok?'Пришлите себе сообщение с другого аккаунта для проверки':'Проверьте разрешение в настройках браузера');draw()})}
+  else if(a==='pushoff'){pushDrop().then(()=>{toast('Уведомления выключены','Включить снова можно в настройках');draw()})}
+  else if(a==='pushtest')pushTest();
   else if(a==='install'){if(IP){IP.prompt();IP.userChoice.finally(()=>{IP=null;draw()})}}
   else if(a==='vplay')vPlay(+v);else if(a==='vspd')vSpeed();else if(a==='vnplay')vnOpen(+v);
   else if(a==='vshape'){cfg.vs=shapeOk(v);saveCfg();draw()}else if(a==='vmode'){cfg.vm=v==='vnote'?'vnote':'voice';saveCfg();draw()}
@@ -1175,6 +1402,7 @@ document.addEventListener('input',e=>{
   if(t.dataset.k==='email')A.email=t.value;
   else if(t.dataset.k==='q'){ui.q=t.value;draw()}
   else if(t.dataset.k==='fq'){ui.fq=t.value;draw();cloudFind(t.value)}
+  else if(t.dataset.g){const k=t.dataset.g;ui.gd=ui.gd||{};if(k==='h'){const v=t.value.toLowerCase().replace(/[^a-z0-9_@]/g,'');t.value=v;ui.gd.h=v}else ui.gd[k]=t.value}
   else if(t.dataset.p){A.p[t.dataset.p]=t.dataset.p==='un'?t.value.toLowerCase().replace(/[^a-z0-9_]/g,''):t.value;if(t.dataset.p==='un')t.value=A.p.un}
   else if(t.dataset.th){const k=t.dataset.th;if(k==='in')ui.thin=t.value;else{cfg.th=cfg.th||{};if(k==='n')cfg.th.n=t.value.slice(0,24);else cfg.th[k]=t.value.toLowerCase();saveCfg();applyCfg();const c=$('#thcode');if(c)c.value=themeCode(cfg.th)}}
   else if(t.dataset.y){ui.pay[t.dataset.y]=t.value}
@@ -1192,6 +1420,7 @@ document.addEventListener('change',e=>{
   if(id==='pf')pickPhoto(f,ui.pd);
   else if((id==='ph'||id==='fl')&&e.target.files.length){const arr=[...e.target.files];ui.att=false;sendFiles(arr,id==='ph')}
   else if(id==='sp'&&f){if(f.size>MAXF)return toast('Файл слишком большой','Максимум 100 МБ');const d=ui.sd;d.mode='img';d.file=f;d.url=URL.createObjectURL(f);imgDim(f).then(m=>{if(m){d.w=m.w;d.h=m.h}});draw()}
+  else if(id==='gavf'&&f)imgTo(f,256,256,'cover',url=>{gEdit(ui.chat,{av:url}).then(draw)});
   else if(id==='bf'&&f)imgTo(f,640,220,'cover',url=>{ui.pd.banner=url;draw()});
   else if(id==='sf'&&f)imgTo(f,192,192,'contain',url=>{D=load();if(Object.values(D.stk).filter(x=>x.owner===meId()).length>=20)return toast('Лимит стикеров','Можно хранить до 20 стикеров');const id2='s'+(D.n++);D.stk[id2]={id:id2,owner:meId(),img:url};save();draw()});
 });
@@ -1209,7 +1438,7 @@ document.addEventListener('keydown',e=>{
 function sendMsg(){
   const i=$('#cin');const t=(i?.value||'').trim().slice(0,4000);if(!t||!ui.chat)return;
   const cid=ui.chat;i.value='';
-  mut(()=>{const c=D.c.find(c=>c.id===cid);if(!c||!c.m.includes(meId()))return;D.m.push({id:D.n++,cid,from:meId(),t,ts:Date.now(),st:c.type==='saved'?'read':'sent'})});
+  mut(()=>{const c=D.c.find(c=>c.id===cid);if(!c||!c.m.includes(meId())||!canPost(c))return;D.m.push({id:D.n++,cid,from:meId(),t,ts:Date.now(),st:c.type==='saved'?'read':'sent'})});
   if(cfg.sound)beep();lastCount=-1;draw();$('#cin')?.focus();cloudSync(true);
 }
 function saveProfile(){
@@ -1442,7 +1671,7 @@ function tick(){
   const u=me();if(!u)return;banPoll();plusPoll();devPoll();cloudSync();
   if(sessionStorage.ghT&&!ui.sheet){const th=decodeTheme(sessionStorage.ghT);sessionStorage.removeItem('ghT');if(th){ui.timp=th;ui.sheet='timp';ui.fx={sheet:1};draw()}}
   mine.forEach(c=>{const ms=cmsgs(c.id),l=ms[ms.length-1];if(!l)return;const prev=seen[c.id]??0;
-    if(inited&&l.id>prev&&l.from!==meId()&&ui.chat!==c.id&&Date.now()-l.ts<180000){const o=usr(l.from);if(cfg.on){toast(o?full(o):'Новое сообщение',cfg.preview?l.t:'Новое сообщение',false,c.id);if(cfg.sound)beep()}}
+    if(inited&&l.id>prev&&l.from!==meId()&&ui.chat!==c.id&&Date.now()-l.ts<180000){const o=usr(l.from);if(cfg.on){toast(isGrp(c)?c.name+(o?' · '+o.first:''):(o?full(o):'Новое сообщение'),cfg.preview?l.t:'Новое сообщение',false,c.id);if(cfg.sound)beep()}}
     seen[c.id]=Math.max(prev,l.id)});
   incoming().forEach(x=>{if(inited&&!seenReq.has(x.fid)){if(cfg.on){toast('Заявка в друзья',`${full(x.u)} (@${x.u.un}) хочет дружить`);if(cfg.sound)beep()}}seenReq.add(x.fid)});
   D.s.forEach(x=>{
