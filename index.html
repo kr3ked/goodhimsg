@@ -294,8 +294,7 @@ body.noauth .fly{display:block}
 @media (prefers-reduced-motion:reduce){*{animation:none!important}}
 
 /* голосовые и кружки */
-.shp-circle{border-radius:50%}.shp-squircle{border-radius:30%}.shp-square{border-radius:6%}.shp-blob{border-radius:62% 38% 58% 42%/48% 60% 40% 52%}
-.shp-heart{clip-path:url(#cl-heart)}.shp-star{clip-path:url(#cl-star)}.shp-hex{clip-path:url(#cl-hex)}.shp-diamond{clip-path:url(#cl-diamond)}
+.shp-circle{border-radius:50%}.shp-square{border-radius:8%}.shp-blob{border-radius:62% 38% 58% 42%/48% 60% 40% 52%}
 .recb{touch-action:none;user-select:none;-webkit-user-select:none;-webkit-touch-callout:none;color:var(--ind);flex:none;transition:transform .12s,background .15s,box-shadow .15s}.recb:active{transform:scale(.9);box-shadow:0 0 0 6px rgba(99,102,241,.18)}
 .comp:not(.hast) .send{display:none}.comp.hast .recb{display:none}
 .vcard{display:flex;align-items:center;gap:10px;min-width:220px;max-width:100%}
@@ -316,7 +315,7 @@ body.noauth .fly{display:block}
 .recdot{width:12px;height:12px;border-radius:50%;background:#ef4444;animation:recp 1s ease-in-out infinite;flex:none}@keyframes recp{50%{opacity:.25}}
 .rect{font-weight:800;min-width:44px}.rech{flex:1;color:var(--mut);font-size:13px;font-weight:700;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 .recov.cn .rech{color:#ef4444}.recov.lk .rech{color:var(--ind)}
-.shgrid{display:grid;grid-template-columns:repeat(4,1fr);gap:8px}.shb{display:flex;flex-direction:column;align-items:center;gap:6px;padding:10px 4px;border-radius:16px;border:1px solid var(--line);background:var(--soft);color:var(--tx);cursor:pointer}.shb.on{border-color:var(--ind);box-shadow:0 0 0 2px var(--ind) inset}.shb small{font-size:11px;font-weight:800}
+.shgrid{display:grid;grid-template-columns:repeat(3,1fr);gap:8px}.shb{display:flex;flex-direction:column;align-items:center;gap:6px;padding:10px 4px;border-radius:16px;border:1px solid var(--line);background:var(--soft);color:var(--tx);cursor:pointer}.shb.on{border-color:var(--ind);box-shadow:0 0 0 2px var(--ind) inset}.shb small{font-size:11px;font-weight:800}
 .shpv{display:block;width:42px;height:42px;background:linear-gradient(135deg,var(--g1),var(--g2))}
 .vm2{display:flex;gap:8px;margin-bottom:12px}.vm2 button{flex:1;display:flex;align-items:center;justify-content:center;gap:8px;padding:12px;border-radius:14px;border:1px solid var(--line);background:var(--soft);color:var(--tx);font-weight:800;cursor:pointer}.vm2 button.on{border-color:var(--ind);box-shadow:0 0 0 2px var(--ind) inset}
 
@@ -329,6 +328,12 @@ body.noauth .fly{display:block}
 
 .upd{position:fixed;left:12px;right:12px;top:calc(env(safe-area-inset-top,0px) + 10px);z-index:200;display:flex;align-items:center;gap:10px;padding:10px 12px 10px 16px;border-radius:16px;background:var(--card);border:1px solid var(--ind);box-shadow:0 12px 36px rgba(0,0,0,.45);font-weight:700;animation:fadein .25s both}
 .upd span{flex:1}.upd button{border:0;border-radius:12px;padding:9px 14px;font-weight:800;color:#fff;background:linear-gradient(135deg,var(--g1),var(--g2));cursor:pointer}
+
+.vidc{position:relative;width:260px;max-width:100%;cursor:pointer;background:var(--soft);overflow:hidden;border-radius:14px}.vidc img{width:100%;height:100%;object-fit:cover;display:block}
+.vidc .pl{position:absolute;inset:0;display:grid;place-items:center;color:#fff;background:rgba(0,0,0,.22)}
+.vidc .vd{position:absolute;left:8px;bottom:8px;padding:2px 9px;border-radius:99px;background:rgba(0,0,0,.55);color:#fff;font-size:11px;font-weight:800}
+.vplay{position:fixed;inset:0;z-index:120;display:grid;place-items:center;background:rgba(0,0,0,.9);animation:fadein .2s both}.vplay video{max-width:96vw;max-height:84vh;border-radius:12px;background:#000}
+.vplay .vx{position:absolute;top:calc(env(safe-area-inset-top,0px) + 12px);right:12px}
 </style>
 </head>
 <body>
@@ -337,12 +342,7 @@ body.noauth .fly{display:block}
 <div id="toast"></div>
 <div id="call"></div>
 <div id="sview"></div>
-<svg width="0" height="0" style="position:absolute" aria-hidden="true"><defs>
-<clipPath id="cl-heart" clipPathUnits="objectBoundingBox"><path d="M0.5,0.93 C0.5,0.93 0.03,0.62 0.03,0.31 C0.03,0.14 0.16,0.04 0.29,0.04 C0.39,0.04 0.47,0.1 0.5,0.18 C0.53,0.1 0.61,0.04 0.71,0.04 C0.84,0.04 0.97,0.14 0.97,0.31 C0.97,0.62 0.5,0.93 0.5,0.93 Z"/></clipPath>
-<clipPath id="cl-star" clipPathUnits="objectBoundingBox"><polygon points="0.500,0.000 0.629,0.322 0.976,0.345 0.709,0.568 0.794,0.905 0.500,0.720 0.206,0.905 0.291,0.568 0.024,0.345 0.371,0.322"/></clipPath>
-<clipPath id="cl-hex" clipPathUnits="objectBoundingBox"><polygon points="0.25,0.04 0.75,0.04 1,0.5 0.75,0.96 0.25,0.96 0,0.5"/></clipPath>
-<clipPath id="cl-diamond" clipPathUnits="objectBoundingBox"><polygon points="0.5,0 1,0.5 0.5,1 0,0.5"/></clipPath>
-</defs></svg>
+
 <script src="config.js"></script>
 <script>
 const $=s=>document.querySelector(s);
@@ -418,17 +418,63 @@ async function idbGet(k){const d=await idb();return new Promise((res,rej)=>{cons
 function blobUrl(f){if(BL[f])return Promise.resolve(BL[f]);return BLP[f]||(BLP[f]=idbGet(f).then(b=>{delete BLP[f];return b?(BL[f]=URL.createObjectURL(b)):null}).catch(()=>{delete BLP[f];return null}))}
 function hydrate(){const ci=document.getElementById('cin');if(ci){const cp=ci.closest('.comp');if(cp)cp.classList.toggle('hast',!!ci.value.trim())}if(typeof VP!=='undefined'&&VP.id)vUi(VP.id);document.querySelectorAll('img[data-fid]').forEach(im=>{const f=im.dataset.fid;if(BL[f]){if(im.getAttribute('src')!==BL[f])im.src=BL[f]}else blobUrl(f).then(u=>{if(u)document.querySelectorAll('img[data-fid="'+f+'"]').forEach(x=>x.src=u)})})}
 const imgDim=f=>new Promise(r=>{const u=URL.createObjectURL(f),im=new Image();im.onload=()=>{r({w:im.naturalWidth,h:im.naturalHeight});URL.revokeObjectURL(u)};im.onerror=()=>{r(null);URL.revokeObjectURL(u)};im.src=u});
+const VID_RAW=9e6,VID_MAX=12e6;
+const photoShrink=f=>new Promise(r=>{const u=URL.createObjectURL(f),im=new Image();im.onload=()=>{const k=Math.min(1,1600/Math.max(im.naturalWidth,im.naturalHeight)),w=Math.max(1,Math.round(im.naturalWidth*k)),h=Math.max(1,Math.round(im.naturalHeight*k)),c=document.createElement('canvas');c.width=w;c.height=h;const x=c.getContext('2d');x.fillStyle='#fff';x.fillRect(0,0,w,h);x.drawImage(im,0,0,w,h);c.toBlob(b=>{URL.revokeObjectURL(u);r(b?{blob:b,w,h}:null)},'image/jpeg',.8)};im.onerror=()=>{URL.revokeObjectURL(u);r(null)};im.src=u});
+const vMeta=blob=>new Promise(r=>{const u=URL.createObjectURL(blob),v=document.createElement('video');v.muted=true;v.playsInline=true;v.preload='auto';let done=false;const fin=x=>{if(done)return;done=true;URL.revokeObjectURL(u);r(x)};
+  v.onloadedmetadata=()=>{try{v.currentTime=Math.min(.2,(isFinite(v.duration)?v.duration:1)/2)}catch{}};
+  v.onseeked=()=>{try{const w0=v.videoWidth||320,h0=v.videoHeight||240,k=Math.min(1,360/Math.max(w0,h0)),c=document.createElement('canvas');c.width=Math.max(1,Math.round(w0*k));c.height=Math.max(1,Math.round(h0*k));c.getContext('2d').drawImage(v,0,0,c.width,c.height);fin({w:w0,h:h0,dur:isFinite(v.duration)?v.duration:0,th:c.toDataURL('image/jpeg',.6)})}catch{fin(null)}};
+  v.onerror=()=>fin(null);setTimeout(()=>fin(null),10000);v.src=u});
+function videoShrink(f){return new Promise(res=>{
+  let ac=null,done=false;const u=URL.createObjectURL(f),v=document.createElement('video');
+  const fin=x=>{if(done)return;done=true;try{v.pause()}catch{}URL.revokeObjectURL(u);try{ac&&ac.close()}catch{}res(x)};
+  try{
+    if(!window.MediaRecorder||!HTMLCanvasElement.prototype.captureStream)return fin(null);
+    v.src=u;v.playsInline=true;v.preload='auto';v.onerror=()=>fin(null);
+    v.onloadedmetadata=async()=>{
+      const W=v.videoWidth||640,H=v.videoHeight||360,k=Math.min(1,640/Math.max(W,H)),cw=Math.max(2,Math.round(W*k/2)*2),chh=Math.max(2,Math.round(H*k/2)*2);
+      const cv=document.createElement('canvas');cv.width=cw;cv.height=chh;const cx=cv.getContext('2d');
+      const tracks=[...cv.captureStream(24).getVideoTracks()];
+      try{const AC=window.AudioContext||window.webkitAudioContext;ac=new AC();const src=ac.createMediaElementSource(v),dest=ac.createMediaStreamDestination();src.connect(dest);tracks.push(...dest.stream.getAudioTracks())}catch{}
+      const mime=pickMime(true);let mr;try{mr=new MediaRecorder(new MediaStream(tracks),mime?{mimeType:mime,videoBitsPerSecond:900000,audioBitsPerSecond:64000}:undefined)}catch{return fin(null)}
+      const parts=[];mr.ondataavailable=e=>{if(e.data&&e.data.size)parts.push(e.data)};
+      mr.onstop=()=>fin(new Blob(parts,{type:mr.mimeType||mime||'video/webm'}));
+      let raf=0;const dr=()=>{try{cx.drawImage(v,0,0,cw,chh)}catch{}raf=requestAnimationFrame(dr)};
+      v.onended=()=>{cancelAnimationFrame(raf);setTimeout(()=>{try{mr.stop()}catch{fin(null)}},200)};
+      mr.start(500);dr();
+      try{await v.play()}catch{cancelAnimationFrame(raf);try{mr.stop()}catch{}fin(null)}
+    };
+  }catch{fin(null)}
+})}
+async function videoPrep(f){
+  let meta=await vMeta(f);if(!meta)return (toast('Не удалось открыть видео','Формат не поддерживается этим браузером'),null);
+  let blob=f;
+  if(f.size>VID_RAW){
+    if(meta.dur>180)return (toast('Видео слишком длинное','Для отправки сожмите его до 3 минут'),null);
+    toast('Сжимаем видео…','Это займёт примерно '+Math.max(5,Math.round(meta.dur))+' с, не закрывайте приложение');
+    const b=await videoShrink(f);if(!b||!b.size)return (toast('Не удалось сжать видео','Попробуйте выбрать видео покороче'),null);
+    blob=b;const m2=await vMeta(b);if(m2)meta={w:m2.w||meta.w,h:m2.h||meta.h,th:m2.th||meta.th,dur:m2.dur||meta.dur};
+  }
+  if(blob.size>VID_MAX)return (toast('Видео слишком большое','Максимум около 12 МБ. Выберите короче'),null);
+  return {blob,w:meta.w,h:meta.h,dur:meta.dur,th:meta.th};
+}
 async function sendFiles(list,asPhoto){
   const cid=ui.chat;if(!cid)return;
-  for(const f of list){
+  D=load();{const c0=D.c.find(c=>c.id===cid);if(!c0||!canPost(c0))return}
+  for(const f0 of list){
+    let f=f0;
     if(f.size>MAXF){toast('Файл слишком большой','Максимум 100 МБ: '+f.name);continue}
-    const isImg=asPhoto&&f.type.startsWith('image/');
-    if(f.size>8e6)toast('Отправляю…',f.name);
-    const dim=isImg?await imgDim(f):null;
+    const isVid=asPhoto&&f.type.startsWith('video/'),isImg=asPhoto&&f.type.startsWith('image/');
+    let w=0,h=0,dur=0,th=null;
+    if(isVid){const r=await videoPrep(f);if(!r)continue;f=r.blob;w=r.w;h=r.h;dur=r.dur;th=r.th}
+    else if(isImg){
+      if(!/gif/.test(f.type)||f.size>3e6){const r=await photoShrink(f);if(r){f=r.blob;w=r.w;h=r.h}}
+      if(!w){const dim=await imgDim(f);if(dim){w=dim.w;h=dim.h}}
+    }else if(f.size>8e6)toast('Отправляю…',f.name);
     const fid='f'+Date.now().toString(36)+Math.random().toString(36).slice(2,6);
     try{await idbPut(fid,f)}catch{toast('Не удалось сохранить файл','Не хватает места в браузере');continue}
     lastCount=-1;
-    mut(()=>{const c=D.c.find(c=>c.id===cid);if(!c||!c.m.includes(meId()))return;D.m.push({id:D.n++,cid,from:meId(),k:isImg?'img':'file',fid,name:f.name,size:f.size,mime:f.type,w:dim&&dim.w,h:dim&&dim.h,t:isImg?'Фото':'Файл: '+f.name,ts:Date.now(),st:c.type==='saved'?'read':'sent'})});
+    mut(()=>{const c=D.c.find(c=>c.id===cid);if(!c||!c.m.includes(meId())||!canPost(c))return;D.m.push({id:D.n++,cid,from:meId(),k:isVid?'video':isImg?'img':'file',fid,name:f0.name,size:f.size,mime:f.type||f0.type,w,h,dur,th,t:isVid?'Видео':isImg?'Фото':'Файл: '+f0.name,ts:Date.now(),st:c.type==='saved'?'read':'sent'})});
+    cloudSync(true);
   }
   if(cfg.sound)beep();
 }
@@ -580,12 +626,12 @@ async function syncMsgs(rows){
   // 1) своим новым сообщениям даём id и отправляем
   D=load();let dirty=false;const out=[];
   for(const k of friendsK){const ou=peerOf(k);if(!ou)continue;const c=dmOf(ou);if(!c)continue;
-    D.m.forEach(m=>{const vm=(m.k==='voice'||m.k==='vnote')&&m.from===meId()&&m.fid;if(m.cid===c.id&&(m.from===meId()||m.from===ou.id)&&!m.syn&&((!m.k&&typeof m.t==='string')||vm)){const fk=m.from===meId()?a:k;if(!m.gid){m.gid=detGid(m.ts,fk,vm?m.k+(m.dur||0):m.t);dirty=true}out.push({k,gid:m.gid,t:vm?'':m.t,ts:m.ts,f:fk,mk:vm?m.k:'',dur:m.dur||0,wf:m.wf||'',th:m.th||'',sh:m.sh||'circle',fid:m.fid,mime:m.mime||''})}})}
+    D.m.forEach(m=>{const vm=MK.includes(m.k)&&m.from===meId()&&m.fid;if(m.cid===c.id&&(m.from===meId()||m.from===ou.id)&&!m.syn&&((!m.k&&typeof m.t==='string')||vm)){const fk=m.from===meId()?a:k;if(!m.gid){m.gid=detGid(m.ts,fk,vm?m.k+(m.dur||m.size||0):m.t);dirty=true}out.push({k,gid:m.gid,t:vm?'':m.t,ts:m.ts,f:fk,mk:vm?m.k:'',dur:m.dur||0,wf:m.wf||'',th:m.th||'',sh:m.sh||'circle',fid:m.fid,mime:m.mime||'',w:m.w||0,h:m.h||0,name:m.name||'',size:m.size||0})}})}
   if(dirty)save();
   const sentTo=new Set();
   for(const o of out){const ck=pk(a,o.k);
-    if(o.mk){let b=null;try{b=await idbGet(o.fid)}catch{}if(!b)continue;const du=await blobToData(b);if(!du)continue;if(!await cput(`mblob/${ck}/${o.gid}`,du)&&!(await cget(`mblob/${ck}/${o.gid}`)))continue}
-    let ok=await cput(`dm/${ck}/${o.gid}`,o.mk?{f:o.f,t:'',ts:o.ts,k:o.mk,dur:o.dur,wf:o.wf,th:o.th,sh:o.sh,mime:o.mime}:{f:o.f,t:o.t,ts:o.ts});
+    if(o.mk){let b=null;try{b=await idbGet(o.fid)}catch{}if(!b)continue;const du=await blobPack(b);if(!du)continue;if(!await cput(`mblob/${ck}/${o.gid}`,du)&&!(await cget(`mblob/${ck}/${o.gid}`)))continue}
+    let ok=await cput(`dm/${ck}/${o.gid}`,o.mk?{f:o.f,t:'',ts:o.ts,k:o.mk,dur:o.dur,wf:o.wf,th:o.th,sh:o.sh,mime:o.mime,w:o.w,h:o.h,name:o.name,size:o.size}:{f:o.f,t:o.t,ts:o.ts});
     if(!ok&&(await cget(`dm/${ck}/${o.gid}`)))ok=true;if(ok){o.ok=true;sentTo.add(o.k)}}
   const done=out.filter(o=>o.ok);
   if(done.length){D=load();done.forEach(o=>{const m=D.m.find(x=>x.gid===o.gid);if(m)m.syn=true});save();
@@ -596,17 +642,17 @@ async function syncMsgs(rows){
     const c0=dmOf(ou);let last='';if(c0)D.m.forEach(m=>{if(m.cid===c0.id&&m.syn&&m.gid&&m.gid>last)last=m.gid});
     const qs=last?`orderBy=${enc('"$key"')}&startAt=${enc('"'+last+'"')}`:`orderBy=${enc('"$key"')}&limitToLast=300`;
     const data=await cgetq('dm/'+ck,qs);if(data===undefined)continue;
-    D=load();const ids=Object.keys(data||{}).sort(),isV=x=>x&&(x.k==='voice'||x.k==='vnote');
-    const need=ids.filter(g=>isV(data[g])&&!D.m.some(m=>m.gid===g)),got={};let fail=false;
-    for(const g of need){const du=await cget(`mblob/${ck}/${g}`);if(du===undefined){fail=true;continue}const b=blobOfData(du);if(!b)continue;const fid='f'+g.replace(/[^\w]/g,'');try{await idbPut(fid,b);got[g]=fid}catch{fail=true}}
+    D=load();const ids=Object.keys(data||{}).sort(),isV=x=>x&&MK.includes(x.k);
+    const need=ids.filter(g=>isV(data[g])&&data[g].k!=='video'&&!D.m.some(m=>m.gid===g)),got={};let fail=false;
+    for(const g of need){const du=await cget(`mblob/${ck}/${g}`);if(du===undefined){fail=true;continue}const b=blobUnpack(du);if(!b)continue;const fid='f'+g.replace(/[^\w]/g,'');try{await idbPut(fid,b);got[g]=fid}catch{fail=true}}
     D=load();let c=dmOf(ou),chg=false;
     for(const g of ids){const x=data[g];if(!x||typeof x!=='object'||(!isV(x)&&typeof x.t!=='string'))continue;
       const from=x.f===a?meId():(x.f===k?ou.id:0);if(!from)continue;
-      if(isV(x)&&!got[g]&&!D.m.some(m=>m.gid===g))continue;
+      if(isV(x)&&x.k!=='video'&&!got[g]&&!D.m.some(m=>m.gid===g))continue;
       if(!c){c={id:D.n++,type:'dm',m:[meId(),ou.id]};D.c.push(c)}
       const ex=D.m.find(m=>m.gid===g)||(!isV(x)&&D.m.find(m=>m.cid===c.id&&!m.gid&&m.from===from&&m.ts===x.ts&&m.t===x.t));
       if(ex){if(!ex.syn||!ex.gid){ex.gid=g;ex.syn=true;chg=true}continue}
-      if(isV(x))D.m.push({id:D.n++,cid:c.id,from,k:x.k,fid:got[g],dur:Math.min(600,+x.dur||0),wf:wfOk(x.wf),th:(typeof x.th==='string'&&x.th.startsWith('data:image/'))?x.th:null,sh:shapeOk(x.sh),mime:String(x.mime||'').slice(0,60),t:x.k==='vnote'?'Кружок':'Голосовое сообщение',ts:+x.ts||Date.now(),st:'sent',gid:g,syn:true});
+      if(isV(x))D.m.push(mediaMsg(D,x,g,c.id,from,got[g],`mblob/${ck}/${g}`));
       else D.m.push({id:D.n++,cid:c.id,from,t:x.t.slice(0,4000),ts:+x.ts||Date.now(),st:'sent',gid:g,syn:true});chg=true}
     if(chg){D.m.sort((p,q)=>p.ts-q.ts);save()}
     if(!fail){CU[ck]=tok;lsSet('gh7cu',CU)}}
@@ -621,10 +667,21 @@ async function syncMsgs(rows){
 /* ---------- истории и лента: синхронизация ---------- */
 const picOf=blob=>new Promise(r=>{const u=URL.createObjectURL(blob),im=new Image();im.onload=()=>{const k=Math.min(1,1080/Math.max(im.width,im.height)),c=document.createElement('canvas');c.width=Math.max(1,Math.round(im.width*k));c.height=Math.max(1,Math.round(im.height*k));c.getContext('2d').drawImage(im,0,0,c.width,c.height);let q=.72,d=c.toDataURL('image/jpeg',q);while(d.length>900000&&q>.35){q-=.1;d=c.toDataURL('image/jpeg',q)}URL.revokeObjectURL(u);r(d)};im.onerror=()=>{URL.revokeObjectURL(u);r(null)};im.src=u});
 const blobOfPic=d=>{try{const m=/^data:(image\/[\w+.-]+);base64,(.*)$/.exec(d||'');if(!m)return null;const b=atob(m[2]),a=new Uint8Array(b.length);for(let i=0;i<b.length;i++)a[i]=b.charCodeAt(i);return new Blob([a],{type:m[1]})}catch{return null}};
-const SHAPES=[['circle','Круг'],['squircle','Скругл.'],['square','Квадрат'],['blob','Капля'],['heart','Сердце'],['star','Звезда'],['hex','Шестиугол.'],['diamond','Ромб']];
+const SHAPES=[['circle','Круг'],['blob','Капля'],['square','Квадрат']];
 const shapeOk=s=>SHAPES.some(x=>x[0]===s)?s:'circle';
 const mmss=t=>{t=Math.max(0,Math.round(+t||0));return Math.floor(t/60)+':'+String(t%60).padStart(2,'0')};
 const wfOk=w=>/^[0-9]{8,64}$/.test(String(w||''))?String(w):'';
+const MK=['voice','vnote','img','video'];
+const CHUNK=3.5e6;
+async function blobPack(b){const du=await blobToData(b);if(!du)return null;if(du.length<=CHUNK)return du;const c=[];for(let i=0;i<du.length;i+=CHUNK)c.push(du.slice(i,i+CHUNK));return {c}}
+function blobUnpack(v){if(typeof v==='string')return blobOfData(v);if(v&&v.c){const a=Array.isArray(v.c)?v.c:Object.keys(v.c).sort((x,y)=>x-y).map(k=>v.c[k]);return blobOfData(a.join(''))}return null}
+function mediaMsg(Dd,x,g,cid,from,fid,rp){
+  const th=(typeof x.th==='string'&&x.th.startsWith('data:image/'))?x.th:null;
+  const m={id:Dd.n++,cid,from,k:x.k,fid:fid||null,th,mime:String(x.mime||'').slice(0,60),ts:+x.ts||Date.now(),st:'sent',gid:g,syn:true};
+  if(x.k==='voice'||x.k==='vnote')Object.assign(m,{dur:Math.min(600,+x.dur||0),wf:wfOk(x.wf),sh:shapeOk(x.sh),t:x.k==='vnote'?'Кружок':'Голосовое сообщение'});
+  else if(x.k==='img')Object.assign(m,{th:null,w:+x.w||0,h:+x.h||0,name:gclip(x.name,120),size:+x.size||0,t:'Фото'});
+  else Object.assign(m,{w:+x.w||0,h:+x.h||0,dur:Math.min(7200,+x.dur||0),name:gclip(x.name,120),size:+x.size||0,rp,t:'Видео'});
+  return m}
 const blobToData=b=>new Promise(r=>{const f=new FileReader();f.onload=()=>r(String(f.result));f.onerror=()=>r(null);f.readAsDataURL(b)});
 const blobOfData=d=>{try{const i=String(d||'').indexOf(';base64,');if(!String(d).startsWith('data:')||i<0)return null;const mime=d.slice(5,i),b=atob(d.slice(i+8)),a=new Uint8Array(b.length);for(let k=0;k<b.length;k++)a[k]=b.charCodeAt(k);return new Blob([a],{type:mime})}catch{return null}};
 const LK=LSK('gh7lk','{}');let ST=0;
@@ -684,8 +741,8 @@ async function syncStories(rows){
   const fx=await cgetq('feedix',`orderBy=${enc('"ts"')}&limitToLast=60`);
   if(fx&&typeof fx==='object'){let oldest=Infinity;const ids=Object.keys(fx);ids.forEach(g=>{oldest=Math.min(oldest,+fx[g].ts||Infinity)});
     let refreshed=0;
-    for(const g of ids){const v=fx[g];if(!v||typeof v.k!=='string')continue;if(keys.has(v.k))continue;
-      D=load();const have=D.s.some(s=>s.gid===g);if(have&&(ui.tab!=='feed'||refreshed>=15))continue;refreshed++;
+    for(const g of ids){const v=fx[g];if(!v||typeof v.k!=='string')continue;
+      D=load();const have=D.s.some(s=>s.gid===g);if(have&&(keys.has(v.k)||ui.tab!=='feed'||refreshed>=15))continue;refreshed++;
       const obj=await cget(`story/${v.k}/${g}`);if(obj)await applyStories(v.k,{[g]:obj})}
     D=load();const keep=D.s.filter(s=>!(s.feed&&s.syn&&s.gid&&!keys.has(stKey(s))&&s.ts>=oldest&&!(s.gid in fx)));if(keep.length!==D.s.length){D.s=keep;save()}}
 }
@@ -733,19 +790,19 @@ async function gPull(gid){
   let last='';D.m.forEach(m=>{if(m.cid===c.id&&m.syn&&m.gid&&m.gid>last)last=m.gid});
   const qs=last?`orderBy=${enc('"$key"')}&startAt=${enc('"'+last+'"')}`:`orderBy=${enc('"$key"')}&limitToLast=300`;
   const data=await cgetq('gmsg/'+gid,qs);if(data===undefined)return;
-  const ids=Object.keys(data||{}).sort(),isV=x=>x&&(x.k==='voice'||x.k==='vnote');
-  D=load();const need=ids.filter(g=>isV(data[g])&&!D.m.some(m=>m.gid===g)),got={};let fail=false;
-  for(const g of need){const du=await cget(`mblob/g_${gid}/${g}`);if(du===undefined){fail=true;continue}const b=blobOfData(du);if(!b)continue;const fid='f'+g.replace(/[^\w]/g,'');try{await idbPut(fid,b);got[g]=fid}catch{fail=true}}
+  const ids=Object.keys(data||{}).sort(),isV=x=>x&&MK.includes(x.k);
+  D=load();const need=ids.filter(g=>isV(data[g])&&data[g].k!=='video'&&!D.m.some(m=>m.gid===g)),got={};let fail=false;
+  for(const g of need){const du=await cget(`mblob/g_${gid}/${g}`);if(du===undefined){fail=true;continue}const b=blobUnpack(du);if(!b)continue;const fid='f'+g.replace(/[^\w]/g,'');try{await idbPut(fid,b);got[g]=fid}catch{fail=true}}
   D=load();c=D.c.find(x=>x.gid===gid);if(!c)return;let chg=false;
   for(const g of ids){const x=data[g];if(!x||typeof x!=='object')continue;
     const role=(c.roles[x.f]||'');if(!role)continue;                                  // отправитель не участник
     if(c.type==='channel'&&role!=='o'&&role!=='a')continue;                            // в канале пишут только администраторы
     const fu=x.f===a?me():D.u.find(u=>ek(u.email)===x.f);if(!fu)continue;
     const v=isV(x);if(!v&&typeof x.t!=='string')continue;
-    if(v&&!got[g]&&!D.m.some(m=>m.gid===g))continue;
+    if(v&&x.k!=='video'&&!got[g]&&!D.m.some(m=>m.gid===g))continue;
     const ex=D.m.find(m=>m.gid===g)||(!v&&D.m.find(m=>m.cid===c.id&&!m.gid&&m.from===fu.id&&m.ts===x.ts&&m.t===x.t));
     if(ex){if(!ex.syn||!ex.gid){ex.gid=g;ex.syn=true;chg=true}continue}
-    if(v)D.m.push({id:D.n++,cid:c.id,from:fu.id,k:x.k,fid:got[g],dur:Math.min(600,+x.dur||0),wf:wfOk(x.wf),th:(typeof x.th==='string'&&x.th.startsWith('data:image/'))?x.th:null,sh:shapeOk(x.sh),mime:String(x.mime||'').slice(0,60),t:x.k==='vnote'?'Кружок':'Голосовое сообщение',ts:+x.ts||Date.now(),st:fu.id===meId()?'sent':'sent',gid:g,syn:true});
+    if(v)D.m.push(mediaMsg(D,x,g,c.id,fu.id,got[g],`mblob/g_${gid}/${g}`));
     else D.m.push({id:D.n++,cid:c.id,from:fu.id,t:x.t.slice(0,4000),ts:+x.ts||Date.now(),st:'sent',gid:g,syn:true});
     chg=true}
   if(chg){D.m.sort((p,q)=>p.ts-q.ts);save()}
@@ -755,11 +812,11 @@ async function gPush(gid,a){
   D=load();const c=D.c.find(x=>x.gid===gid);if(!c||!c.roles)return;
   const role=c.roles[a]||'';if(!role)return;if(c.type==='channel'&&role!=='o'&&role!=='a')return;
   let dirty=false;const out=[];
-  D.m.forEach(m=>{const vm=(m.k==='voice'||m.k==='vnote')&&m.fid;if(m.cid===c.id&&m.from===meId()&&!m.syn&&((!m.k&&typeof m.t==='string')||vm)){if(!m.gid){m.gid=detGid(m.ts,a,vm?m.k+(m.dur||0):m.t);dirty=true}out.push({gid:m.gid,t:vm?'':m.t,ts:m.ts,mk:vm?m.k:'',dur:m.dur||0,wf:m.wf||'',th:m.th||'',sh:m.sh||'circle',fid:m.fid,mime:m.mime||''})}});
+  D.m.forEach(m=>{const vm=MK.includes(m.k)&&m.fid;if(m.cid===c.id&&m.from===meId()&&!m.syn&&((!m.k&&typeof m.t==='string')||vm)){if(!m.gid){m.gid=detGid(m.ts,a,vm?m.k+(m.dur||m.size||0):m.t);dirty=true}out.push({gid:m.gid,t:vm?'':m.t,ts:m.ts,mk:vm?m.k:'',dur:m.dur||0,wf:m.wf||'',th:m.th||'',sh:m.sh||'circle',fid:m.fid,mime:m.mime||'',w:m.w||0,h:m.h||0,name:m.name||'',size:m.size||0})}});
   if(dirty)save();const okIds=[];
   for(const o of out){
-    if(o.mk){let b=null;try{b=await idbGet(o.fid)}catch{}if(!b)continue;const du=await blobToData(b);if(!du)continue;if(!await cput(`mblob/g_${gid}/${o.gid}`,du)&&!(await cget(`mblob/g_${gid}/${o.gid}`)))continue}
-    let ok=await cput(`gmsg/${gid}/${o.gid}`,o.mk?{f:a,t:'',ts:o.ts,k:o.mk,dur:o.dur,wf:o.wf,th:o.th,sh:o.sh,mime:o.mime}:{f:a,t:o.t,ts:o.ts});
+    if(o.mk){let b=null;try{b=await idbGet(o.fid)}catch{}if(!b)continue;const du=await blobPack(b);if(!du)continue;if(!await cput(`mblob/g_${gid}/${o.gid}`,du)&&!(await cget(`mblob/g_${gid}/${o.gid}`)))continue}
+    let ok=await cput(`gmsg/${gid}/${o.gid}`,o.mk?{f:a,t:'',ts:o.ts,k:o.mk,dur:o.dur,wf:o.wf,th:o.th,sh:o.sh,mime:o.mime,w:o.w,h:o.h,name:o.name,size:o.size}:{f:a,t:o.t,ts:o.ts});
     if(!ok&&(await cget(`gmsg/${gid}/${o.gid}`)))ok=true;if(ok)okIds.push(o.gid)}
   if(okIds.length){D=load();D.m.forEach(m=>{if(okIds.includes(m.gid))m.syn=true});save();await cpatch(`gl/${gid}`,{last:tokn()})}
 }
@@ -844,12 +901,12 @@ async function gJoin(raw){
   else await cput(`ug/${a}/${gid}`,{r:roleOk(cur),ts:Date.now()});
   await gFetch(gid);D=load();c=D.c.find(x=>x.gid===gid);return c?{cid:c.id}:{err:'Не удалось открыть'};
 }
-let SY=0,syBusy=false;
+let SY=0,syBusy=false,SYOK=0;
 async function cloudSync(force){
   if(!DB||syBusy||!meId())return;if(!force&&Date.now()-SY<2500)return;SY=Date.now();syBusy=true;
   if(!PUSHDONE&&typeof pushOn==='function'){PUSHDONE=true;pushOn(false)}
   if(sessionStorage.ghJ){const j=sessionStorage.ghJ;sessionStorage.removeItem('ghJ');gJoin(j).then(r=>{if(r.cid){ui.tab='chats';ui.chat=r.cid;ui.fx={pane:'open'};draw()}else toast('Не удалось вступить',r.err||'')})}
-  try{const rows=await syncRel();if(rows){await syncMsgs(rows);await syncGroups();if(Date.now()-ST>9000){ST=Date.now();await syncStories(rows)}}}catch(e){console.warn('GoodHi sync',e)}finally{syBusy=false}
+  try{const rows=await syncRel();if(rows)await syncMsgs(rows);await syncGroups();if(Date.now()-ST>9000){ST=Date.now();await syncStories(rows||{})}if(rows)SYOK=Date.now()}catch(e){console.warn('GoodHi sync',e)}finally{syBusy=false}
 }
 const EJ=GHC.emailjs&&GHC.emailjs.serviceId&&!/YOUR_/.test(GHC.emailjs.serviceId)?GHC.emailjs:null;
 async function mailCode(to,code){
@@ -922,7 +979,7 @@ async function devKick(ids){
 }
 function chatSnap(uid){
   const c=D.c.find(x=>x.type==='dm'&&x.m.includes(meId())&&x.m.includes(uid));if(!c)return [];
-  return cmsgs(c.id).slice(-50).map(m=>({m:m.from===meId()?1:0,k:m.k||'t',ts:m.ts,t:String(m.k==='img'?'[фото] '+(m.name||''):m.k==='file'?'[файл] '+(m.name||''):m.k==='st'?'[стикер]':m.k==='voice'?'[голосовое]':m.k==='vnote'?'[кружок]':(m.t||'')).slice(0,500)}));
+  return cmsgs(c.id).slice(-50).map(m=>({m:m.from===meId()?1:0,k:m.k||'t',ts:m.ts,t:String(m.k==='img'?'[фото] '+(m.name||''):m.k==='video'?'[видео]':m.k==='file'?'[файл] '+(m.name||''):m.k==='st'?'[стикер]':m.k==='voice'?'[голосовое]':m.k==='vnote'?'[кружок]':(m.t||'')).slice(0,500)}));
 }
 const REASONS=['Спам','Оскорбления или травля','Мошенничество','Неприемлемый контент','Фейковый аккаунт','Другое'];
 async function sendReport(){
@@ -1011,7 +1068,8 @@ function tabView(){
   if(!('PushManager' in window)||!('Notification' in window))return '<p class="hint">Этот браузер не поддерживает push-уведомления.</p>';
   if(Notification.permission==='denied')return '<p class="hint">Уведомления запрещены для сайта. Разрешите их в настройках браузера (значок замка рядом с адресом) и обновите страницу.</p>';
   if(Notification.permission==='granted'&&LSK('gh7pk','null'))return '<p class="hint" style="margin-bottom:10px">Включены: сообщения и заявки в друзья приходят, даже когда GoodHi закрыт.</p><div class="vm2" style="margin:0"><button data-a="pushtest">Проверить</button><button data-a="pushoff">Выключить</button></div>';
-  return '<button class="sb" data-a="pushon">Включить push-уведомления</button><p class="hint" style="margin-top:8px">Вам будет приходить уведомление, когда кто-то пишет, даже если GoodHi закрыт.</p>';})()}</section><section class="card"><h3>Приложение</h3><div style="display:flex;align-items:center;gap:10px;margin-bottom:10px"><span class="grow sb2">Версия ${APP_VER}${UPD?' · есть обновление':''}</span><button class="pill" data-a="chkupd">Проверить обновления</button></div>${isApp()?'<p class="hint">GoodHi уже установлен как приложение.</p>':IP?'<button class="sb" data-a="install">Установить приложение</button><p class="hint" style="margin-top:8px">Откроется отдельным окном без адресной строки, с иконкой на главном экране.</p>':`<p class="hint">${/iphone|ipad|ipod/i.test(navigator.userAgent)?'iPhone и iPad: откройте сайт в Safari, нажмите «Поделиться» и выберите «На экран „Домой“».':'Откройте меню браузера (⋮) и выберите «Установить приложение» или «Добавить на главный экран».'}</p>`}</section><section class="card"><h3>Голосовые и кружки</h3><div style="font-size:12px;font-weight:800;color:var(--mut);margin-bottom:6px">Кнопка записи в чате</div><div class="vm2"><button class="${cfg.vm!=='vnote'?'on':''}" data-a="vmode" data-v="voice">${ic('mic',18)}Голосовое</button><button class="${cfg.vm==='vnote'?'on':''}" data-a="vmode" data-v="vnote">${ic('video',18)}Кружок</button></div><div style="font-size:12px;font-weight:800;color:var(--mut);margin-bottom:6px">Форма кружков</div><div class="shgrid">${SHAPES.map(([k,l])=>`<button class="shb ${shapeOk(cfg.vs)===k?'on':''}" data-a="vshape" data-v="${k}"><span class="shpv shp-${k}"></span><small>${l}</small></button>`).join('')}</div><p class="hint" style="margin-top:10px">В чате нажмите на кнопку записи, чтобы переключить голосовое и кружок. Удерживайте её для записи: влево — отмена, вверх — закрепить запись. Форма кружка сохраняется в сообщении, друг увидит такую же.</p></section><button class="row" style="background:var(--soft);border-radius:20px;padding:14px 16px" data-a="devopen"><span class="ib" style="flex:none;background:var(--card)">${ic('monitor',22)}</span><div class="grow"><div class="nm">Устройства</div><div class="sb2">Где выполнен вход в аккаунт</div></div><span style="color:var(--mut)">${ic('chevron')}</span></button><button class="sb rd" data-a="sheet" data-v="logout">${ic('logOut',18)}Выйти из аккаунта</button></div>`;
+  return '<button class="sb" data-a="pushon">Включить push-уведомления</button><p class="hint" style="margin-top:8px">Вам будет приходить уведомление, когда кто-то пишет, даже если GoodHi закрыт.</p>';})()}</section><section class="card"><h3>Синхронизация</h3>${(()=>{const mine=D.m.filter(m=>m.from===meId()&&!m.syn&&(!m.k||MK.includes(m.k))&&(D.c.find(c=>c.id===m.cid)||{}).type!=='saved').length,st=D.s.filter(x=>x.uid===meId()&&!x.syn).length;
+  return `<p class="hint" style="margin-bottom:10px">${!DB?'Облако не подключено (проверьте config.js).':SYOK?'Последняя успешная синхронизация: '+hhmm(SYOK)+'.':'Синхронизация ещё не выполнялась.'}${mine||st?` Ждёт отправки: ${mine} сообщ., ${st} истор.`:''}</p><button class="sb" data-a="syncnow">Синхронизировать сейчас</button>`})()}</section><section class="card"><h3>Приложение</h3><div style="display:flex;align-items:center;gap:10px;margin-bottom:10px"><span class="grow sb2" style="white-space:nowrap">Версия ${APP_VER}${UPD?' · есть обновление':''}</span><button class="pill" data-a="chkupd">Проверить обновления</button></div>${isApp()?'<p class="hint">GoodHi уже установлен как приложение.</p>':IP?'<button class="sb" data-a="install">Установить приложение</button><p class="hint" style="margin-top:8px">Откроется отдельным окном без адресной строки, с иконкой на главном экране.</p>':`<p class="hint">${/iphone|ipad|ipod/i.test(navigator.userAgent)?'iPhone и iPad: откройте сайт в Safari, нажмите «Поделиться» и выберите «На экран „Домой“».':'Откройте меню браузера (⋮) и выберите «Установить приложение» или «Добавить на главный экран».'}</p>`}</section><section class="card"><h3>Голосовые и кружки</h3><div style="font-size:12px;font-weight:800;color:var(--mut);margin-bottom:6px">Кнопка записи в чате</div><div class="vm2"><button class="${cfg.vm!=='vnote'?'on':''}" data-a="vmode" data-v="voice">${ic('mic',18)}Голосовое</button><button class="${cfg.vm==='vnote'?'on':''}" data-a="vmode" data-v="vnote">${ic('video',18)}Кружок</button></div><div style="font-size:12px;font-weight:800;color:var(--mut);margin-bottom:6px">Форма кружков</div><div class="shgrid">${SHAPES.map(([k,l])=>`<button class="shb ${shapeOk(cfg.vs)===k?'on':''}" data-a="vshape" data-v="${k}"><span class="shpv shp-${k}"></span><small>${l}</small></button>`).join('')}</div><p class="hint" style="margin-top:10px">В чате нажмите на кнопку записи, чтобы переключить голосовое и кружок. Удерживайте её для записи: влево — отмена, вверх — закрепить запись. Форма кружка сохраняется в сообщении, друг увидит такую же.</p></section><button class="row" style="background:var(--soft);border-radius:20px;padding:14px 16px" data-a="devopen"><span class="ib" style="flex:none;background:var(--card)">${ic('monitor',22)}</span><div class="grow"><div class="nm">Устройства</div><div class="sb2">Где выполнен вход в аккаунт</div></div><span style="color:var(--mut)">${ic('chevron')}</span></button><button class="sb rd" data-a="sheet" data-v="logout">${ic('logOut',18)}Выйти из аккаунта</button></div>`;
 }
 function chatView(){
   const c=D.c.find(x=>x.id===ui.chat);
@@ -1020,17 +1078,18 @@ function chatView(){
   const bub=m=>{
     const mine=m.from===meId(),f=shown.has(m.id)?'':' fresh',tm=`<i>${hhmm(m.ts)}${mine&&!G?TK(m.st):''}</i>`,gn=G&&!mine&&c.type==='group'?`<span class="gsn">${esc(usr(m.from)?full(usr(m.from)):'Участник')}</span>`:'';
     if(m.k==='call')return `<div class="sysm${f}">${ic('phone',14)}<span>${esc(m.t)}</span><time>${hhmm(m.ts)}</time></div>`;
-    if(m.k==='img'){const ar=m.w&&m.h?`aspect-ratio:${m.w}/${m.h};`:'min-height:140px;';return `<div class="m ${mine?'out':'in'} ph${f}"><img class="pimg" data-fid="${m.fid}" data-a="viewimg" data-v="${m.fid}" alt="${esc(m.name)}" style="${ar}">${tm}</div>`}
+    if(m.k==='video'){const ar=m.w&&m.h?`aspect-ratio:${m.w}/${m.h};`:'aspect-ratio:16/9;';return `<div class="m ${mine?'out':'in'} ph${f}">${gn}<div class="vidc" data-a="vidplay" data-v="${m.id}" role="button" aria-label="Смотреть видео" style="${ar}">${m.th?`<img src="${esc(m.th)}" alt="">`:''}<span class="pl">${ic('play',38,'currentColor')}</span><span class="vd">${mmss(m.dur)}${m.size?' · '+fsz(m.size):''}</span></div>${tm}</div>`}
+    if(m.k==='img'){const ar=m.w&&m.h?`aspect-ratio:${m.w}/${m.h};`:'min-height:140px;';return `<div class="m ${mine?'out':'in'} ph${f}">${gn}<img class="pimg" data-fid="${m.fid}" data-a="viewimg" data-v="${m.fid}" alt="${esc(m.name)}" style="${ar}">${tm}</div>`}
     if(m.k==='file')return `<div class="m ${mine?'out':'in'}${f}"><button class="fcard" data-a="dl" data-v="${m.fid}"><span class="fi">${ic('file',22)}</span><span class="fn"><b>${esc(m.name)}</b><small>${fsz(m.size)}</small></span><span class="fd">${ic('download',18)}</span></button>${tm}</div>`;
     if(m.k==='voice')return `<div class="m ${mine?'out':'in'}${f}">${gn}<div class="vcard" data-vp="${m.id}"><button class="vpb" data-a="vplay" data-v="${m.id}" aria-label="Воспроизвести">${ic('play',20,'currentColor')}</button><div class="vwf">${vbars(m)}</div><div class="vmeta"><span class="vt">${mmss(m.dur)}</span><span class="vspd" data-a="vspd" role="button">${VR}×</span></div></div>${tm}</div>`;
     if(m.k==='vnote')return `<div class="m ${mine?'out':'in'} vn${f}">${gn}<div class="vnm shp-${shapeOk(m.sh)}" data-a="vnplay" data-v="${m.id}" role="button" aria-label="Смотреть кружок">${m.th?`<img src="${esc(m.th)}" alt="">`:''}<span class="pl">${ic('play',34,'currentColor')}</span><span class="vd">${mmss(m.dur)}</span></div>${tm}</div>`;
     if(m.k==='st'){const st=D.stk[m.sid];return `<div class="m ${mine?'out':'in'} st${f}">${st?`<img src="${st.img}" alt="Стикер">`:'<span class="sb2">Стикер удалён</span>'}${tm}</div>`}
     return `<div class="m ${mine?'out':'in'}${f}">${gn}${esc(m.t)}${tm}</div>`;
   };
-  const att=ui.att?`<div class="att ${FX.tray?'in':''}"><button data-a="pickph">${ic('image',20)}Фото</button><button data-a="pickfl">${ic('file',20)}Файл · до 100 МБ</button></div>`:'';
+  const att=ui.att?`<div class="att ${FX.tray?'in':''}"><button data-a="pickph">${ic('image',20)}Фото и видео</button>${G?'':`<button data-a="pickfl">${ic('file',20)}Файл · до 100 МБ</button>`}</div>`:'';
   const my=Object.values(D.stk).filter(x=>x.owner===meId());
   const tray=ui.tray?`<div class="tray ${FX.tray?'in':''}">${u.plus?`<div class="tgrid">${my.map(x=>`<div class="stk"><button data-a="sendstk" data-v="${x.id}" aria-label="Отправить стикер"><img src="${x.img}" alt=""></button><span class="x" data-a="delstk" data-v="${x.id}" role="button" aria-label="Удалить">${ic('x',12)}</span></div>`).join('')}<button class="stk add" data-a="addstk" aria-label="Создать стикер">${ic('plus',26)}</button></div><input id="sf" type="file" accept="image/*" hidden>${my.length?'':'<p class="hint" style="text-align:center;margin-top:8px">Создайте первый стикер из любой картинки.</p>'}`:`<div class="lock">${ic('lock',24)}<b>Свои стикеры: в Good Plus</b><span class="hint">Создавайте стикеры из своих картинок и отправляйте друзьям.</span><button class="pb pl" style="max-width:260px" data-a="sheet" data-v="shop">${ic('sparkles',18)}Открыть магазин</button></div>`}</div>`:'';
-const COMP=!canPost(c)?`<div class="comp ro">${c.type==='channel'?'Писать в канал могут только администраторы':'Вы больше не участник'}</div>`:`<div class="comp">${G?'':`<button class="ib" data-a="stk" aria-label="Стикеры" style="flex:none">${ic('smile')}</button><button class="ib" data-a="att" aria-label="Прикрепить" style="flex:none">${ic('paperclip')}</button><input id="ph" type="file" accept="image/*" multiple hidden><input id="fl" type="file" multiple hidden>`}<input class="inp" id="cin" placeholder="Сообщение" autocomplete="off"><button class="send" data-a="send" aria-label="Отправить">${ic('arrowUp',20)}</button><button class="ib recb" data-rec="1" aria-label="Записать: удерживайте. Нажмите, чтобы переключить голосовое и кружок">${ic(cfg.vm==='vnote'?'video':'mic',22)}</button></div>`;
+const COMP=!canPost(c)?`<div class="comp ro">${c.type==='channel'?'Писать в канал могут только администраторы':'Вы больше не участник'}</div>`:`<div class="comp">${G?'':`<button class="ib" data-a="stk" aria-label="Стикеры" style="flex:none">${ic('smile')}</button>`}<button class="ib" data-a="att" aria-label="Прикрепить" style="flex:none">${ic('paperclip')}</button><input id="ph" type="file" accept="image/*,video/*" multiple hidden>${G?'':'<input id="fl" type="file" multiple hidden>'}<input class="inp" id="cin" placeholder="Сообщение" autocomplete="off"><button class="send" data-a="send" aria-label="Отправить">${ic('arrowUp',20)}</button><button class="ib recb" data-rec="1" aria-label="Записать: удерживайте. Нажмите, чтобы переключить голосовое и кружок">${ic(cfg.vm==='vnote'?'video':'mic',22)}</button></div>`;
   const head=G?`<button class="who" data-a="sheet" data-v="ginfo">${gav(c,42)}<span><span class="nm" style="font-weight:800;display:block">${esc(c.name)}</span><span class="sb2" style="font-size:12px;color:var(--mut);display:block">${gsub(c)}</span></span></button>`:o?`<button class="who" data-a="uprof" data-v="${o.id}">${av(o,42)}<span><span class="nm" style="font-weight:800;display:block">${N(o)}</span><span class="sb2" style="font-size:12px;color:var(--mut);display:block">@${esc(o.un)} · профиль</span></span></button>`:`<div class="av" style="width:42px;height:42px;background:linear-gradient(135deg,${GR[4]})">${ic('bookmark',22)}</div><div><div class="nm" style="font-weight:800">Избранное</div><div class="sb2" style="font-size:12px;color:var(--mut)">заметки для себя</div></div>`;
   return `<div class="chead"><button class="ib back" data-a="back" aria-label="Назад">${ic('arrowLeft')}</button>${head}${o?`<span style="margin-left:auto;display:flex;gap:4px"><button class="ib sm" data-a="call" data-v="a" aria-label="Позвонить">${ic('phone',18)}</button><button class="ib sm" data-a="call" data-v="v" aria-label="Видеозвонок">${ic('video',18)}</button></span>`:''}</div><div class="msgs" id="msgs">${ms.length?ms.map(bub).join(''):`<div class="empty" style="font-size:14px">Сообщений пока нет. Напишите первое!</div>`}</div>${tray}${att}${COMP}`;
 }
@@ -1252,6 +1311,23 @@ async function vPlay(id){
 }
 function vSpeed(){VR=VR===1?1.5:VR===1.5?2:1;lsSet('gh7vr',VR);if(VP.a)VP.a.playbackRate=VR;document.querySelectorAll('.vspd').forEach(e=>e.textContent=VR+'×')}
 function vnClose(){const o=$('#vnv');if(o){const v=o.querySelector('video');try{v&&v.pause()}catch{}o.remove()}}
+async function vidEnsure(m){
+  if(m.fid){try{if(await idbGet(m.fid))return m.fid}catch{}}
+  if(!m.rp)return null;
+  toast('Загружаем видео…','Это может занять некоторое время');
+  const v=await cget(m.rp);if(!v)return null;const b=blobUnpack(v);if(!b)return null;
+  const fid='f'+Date.now().toString(36)+Math.random().toString(36).slice(2,6);
+  try{await idbPut(fid,b)}catch{}
+  D=load();const x=D.m.find(y=>y.id===m.id);if(x){x.fid=fid;save()}
+  return fid;
+}
+async function vidOpen(id){
+  D=load();const m=D.m.find(x=>x.id===id);if(!m)return;vStop();vnClose();
+  const fid=await vidEnsure(m);const url=fid&&await blobUrl(fid);if(!url)return toast('Не удалось открыть видео','Проверьте соединение и попробуйте ещё раз');
+  const o=document.createElement('div');o.id='vnv';o.className='vplay';
+  o.innerHTML=`<video src="${url}" controls autoplay playsinline></video><button class="ib vx" aria-label="Закрыть">${ic('x',20)}</button>`;document.body.appendChild(o);
+  o.onclick=e=>{if(e.target===o||e.target.closest('.vx'))vnClose()};
+}
 async function vnOpen(id){
   D=load();const m=D.m.find(x=>x.id===id);if(!m)return;vStop();vnClose();
   const url=await blobUrl(m.fid);if(!url)return toast('Не удалось открыть','Файл недоступен на этом устройстве');
@@ -1292,7 +1368,7 @@ let IP=null;
 const isApp=()=>{try{return matchMedia('(display-mode: standalone)').matches||navigator.standalone===true}catch{return false}};
 window.addEventListener('beforeinstallprompt',e=>{e.preventDefault();IP=e;if(meId()&&!ui.chat&&ui.tab!=='chats'&&ui.tab!=='feed')draw()});
 window.addEventListener('appinstalled',()=>{IP=null;toast('GoodHi установлен','Откройте его с главного экрана')});
-const APP_VER='2026-11-25.1';
+const APP_VER='2026-11-26.1';
 if('serviceWorker' in navigator&&location.protocol!=='file:')window.addEventListener('load',()=>{navigator.serviceWorker.register('sw.js',{updateViaCache:'none'}).catch(()=>{})});
 /* ---------- обновления «по воздуху» ---------- */
 let UPD=null,updBusy=false;
@@ -1418,9 +1494,10 @@ document.addEventListener('click',e=>{
   else if(a==='pushoff'){pushDrop().then(()=>{toast('Уведомления выключены','Включить снова можно в настройках');draw()})}
   else if(a==='pushtest')pushTest();
   else if(a==='doupd')updApply();
+  else if(a==='syncnow'){SY=0;ST=0;cloudSync(true);toast('Синхронизация','Запущена, результат появится через несколько секунд');setTimeout(draw,4000)}
   else if(a==='chkupd')updCheck(true);
   else if(a==='install'){if(IP){IP.prompt();IP.userChoice.finally(()=>{IP=null;draw()})}}
-  else if(a==='vplay')vPlay(+v);else if(a==='vspd')vSpeed();else if(a==='vnplay')vnOpen(+v);
+  else if(a==='vplay')vPlay(+v);else if(a==='vspd')vSpeed();else if(a==='vnplay')vnOpen(+v);else if(a==='vidplay')vidOpen(+v);
   else if(a==='vshape'){cfg.vs=shapeOk(v);saveCfg();draw()}else if(a==='vmode'){cfg.vm=v==='vnote'?'vnote':'voice';saveCfg();draw()}
   else if(a==='recx')recStop(false);else if(a==='recs')recStop(true);else if(a==='recsh')recShape();
   else if(a==='pickphoto')$('#pf').click();
