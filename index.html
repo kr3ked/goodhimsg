@@ -326,6 +326,9 @@ body.noauth .fly{display:block}
 .comp.ro{justify-content:center;color:var(--mut);font-weight:700;font-size:14px;padding:16px;text-align:center}
 .gck{width:24px;height:24px;border-radius:50%;border:2px solid var(--line);display:grid;place-items:center;flex:none;color:#fff}.gck.on{background:var(--ind);border-color:var(--ind)}
 .gcode{display:flex;align-items:center;gap:8px;padding:8px 8px 8px 14px;border-radius:14px;background:var(--soft);font-weight:800;letter-spacing:.06em;word-break:break-all}
+
+.upd{position:fixed;left:12px;right:12px;top:calc(env(safe-area-inset-top,0px) + 10px);z-index:200;display:flex;align-items:center;gap:10px;padding:10px 12px 10px 16px;border-radius:16px;background:var(--card);border:1px solid var(--ind);box-shadow:0 12px 36px rgba(0,0,0,.45);font-weight:700;animation:fadein .25s both}
+.upd span{flex:1}.upd button{border:0;border-radius:12px;padding:9px 14px;font-weight:800;color:#fff;background:linear-gradient(135deg,var(--g1),var(--g2));cursor:pointer}
 </style>
 </head>
 <body>
@@ -1008,7 +1011,7 @@ function tabView(){
   if(!('PushManager' in window)||!('Notification' in window))return '<p class="hint">Этот браузер не поддерживает push-уведомления.</p>';
   if(Notification.permission==='denied')return '<p class="hint">Уведомления запрещены для сайта. Разрешите их в настройках браузера (значок замка рядом с адресом) и обновите страницу.</p>';
   if(Notification.permission==='granted'&&LSK('gh7pk','null'))return '<p class="hint" style="margin-bottom:10px">Включены: сообщения и заявки в друзья приходят, даже когда GoodHi закрыт.</p><div class="vm2" style="margin:0"><button data-a="pushtest">Проверить</button><button data-a="pushoff">Выключить</button></div>';
-  return '<button class="sb" data-a="pushon">Включить push-уведомления</button><p class="hint" style="margin-top:8px">Вам будет приходить уведомление, когда кто-то пишет, даже если GoodHi закрыт.</p>';})()}</section><section class="card"><h3>Приложение</h3>${isApp()?'<p class="hint">GoodHi уже установлен как приложение.</p>':IP?'<button class="sb" data-a="install">Установить приложение</button><p class="hint" style="margin-top:8px">Откроется отдельным окном без адресной строки, с иконкой на главном экране.</p>':`<p class="hint">${/iphone|ipad|ipod/i.test(navigator.userAgent)?'iPhone и iPad: откройте сайт в Safari, нажмите «Поделиться» и выберите «На экран „Домой“».':'Откройте меню браузера (⋮) и выберите «Установить приложение» или «Добавить на главный экран».'}</p>`}</section><section class="card"><h3>Голосовые и кружки</h3><div style="font-size:12px;font-weight:800;color:var(--mut);margin-bottom:6px">Кнопка записи в чате</div><div class="vm2"><button class="${cfg.vm!=='vnote'?'on':''}" data-a="vmode" data-v="voice">${ic('mic',18)}Голосовое</button><button class="${cfg.vm==='vnote'?'on':''}" data-a="vmode" data-v="vnote">${ic('video',18)}Кружок</button></div><div style="font-size:12px;font-weight:800;color:var(--mut);margin-bottom:6px">Форма кружков</div><div class="shgrid">${SHAPES.map(([k,l])=>`<button class="shb ${shapeOk(cfg.vs)===k?'on':''}" data-a="vshape" data-v="${k}"><span class="shpv shp-${k}"></span><small>${l}</small></button>`).join('')}</div><p class="hint" style="margin-top:10px">В чате нажмите на кнопку записи, чтобы переключить голосовое и кружок. Удерживайте её для записи: влево — отмена, вверх — закрепить запись. Форма кружка сохраняется в сообщении, друг увидит такую же.</p></section><button class="row" style="background:var(--soft);border-radius:20px;padding:14px 16px" data-a="devopen"><span class="ib" style="flex:none;background:var(--card)">${ic('monitor',22)}</span><div class="grow"><div class="nm">Устройства</div><div class="sb2">Где выполнен вход в аккаунт</div></div><span style="color:var(--mut)">${ic('chevron')}</span></button><button class="sb rd" data-a="sheet" data-v="logout">${ic('logOut',18)}Выйти из аккаунта</button></div>`;
+  return '<button class="sb" data-a="pushon">Включить push-уведомления</button><p class="hint" style="margin-top:8px">Вам будет приходить уведомление, когда кто-то пишет, даже если GoodHi закрыт.</p>';})()}</section><section class="card"><h3>Приложение</h3><div style="display:flex;align-items:center;gap:10px;margin-bottom:10px"><span class="grow sb2">Версия ${APP_VER}${UPD?' · есть обновление':''}</span><button class="pill" data-a="chkupd">Проверить обновления</button></div>${isApp()?'<p class="hint">GoodHi уже установлен как приложение.</p>':IP?'<button class="sb" data-a="install">Установить приложение</button><p class="hint" style="margin-top:8px">Откроется отдельным окном без адресной строки, с иконкой на главном экране.</p>':`<p class="hint">${/iphone|ipad|ipod/i.test(navigator.userAgent)?'iPhone и iPad: откройте сайт в Safari, нажмите «Поделиться» и выберите «На экран „Домой“».':'Откройте меню браузера (⋮) и выберите «Установить приложение» или «Добавить на главный экран».'}</p>`}</section><section class="card"><h3>Голосовые и кружки</h3><div style="font-size:12px;font-weight:800;color:var(--mut);margin-bottom:6px">Кнопка записи в чате</div><div class="vm2"><button class="${cfg.vm!=='vnote'?'on':''}" data-a="vmode" data-v="voice">${ic('mic',18)}Голосовое</button><button class="${cfg.vm==='vnote'?'on':''}" data-a="vmode" data-v="vnote">${ic('video',18)}Кружок</button></div><div style="font-size:12px;font-weight:800;color:var(--mut);margin-bottom:6px">Форма кружков</div><div class="shgrid">${SHAPES.map(([k,l])=>`<button class="shb ${shapeOk(cfg.vs)===k?'on':''}" data-a="vshape" data-v="${k}"><span class="shpv shp-${k}"></span><small>${l}</small></button>`).join('')}</div><p class="hint" style="margin-top:10px">В чате нажмите на кнопку записи, чтобы переключить голосовое и кружок. Удерживайте её для записи: влево — отмена, вверх — закрепить запись. Форма кружка сохраняется в сообщении, друг увидит такую же.</p></section><button class="row" style="background:var(--soft);border-radius:20px;padding:14px 16px" data-a="devopen"><span class="ib" style="flex:none;background:var(--card)">${ic('monitor',22)}</span><div class="grow"><div class="nm">Устройства</div><div class="sb2">Где выполнен вход в аккаунт</div></div><span style="color:var(--mut)">${ic('chevron')}</span></button><button class="sb rd" data-a="sheet" data-v="logout">${ic('logOut',18)}Выйти из аккаунта</button></div>`;
 }
 function chatView(){
   const c=D.c.find(x=>x.id===ui.chat);
@@ -1289,7 +1292,34 @@ let IP=null;
 const isApp=()=>{try{return matchMedia('(display-mode: standalone)').matches||navigator.standalone===true}catch{return false}};
 window.addEventListener('beforeinstallprompt',e=>{e.preventDefault();IP=e;if(meId()&&!ui.chat&&ui.tab!=='chats'&&ui.tab!=='feed')draw()});
 window.addEventListener('appinstalled',()=>{IP=null;toast('GoodHi установлен','Откройте его с главного экрана')});
-if('serviceWorker' in navigator&&location.protocol!=='file:')window.addEventListener('load',()=>{navigator.serviceWorker.register('sw.js').catch(()=>{})});
+const APP_VER='2026-11-25.1';
+if('serviceWorker' in navigator&&location.protocol!=='file:')window.addEventListener('load',()=>{navigator.serviceWorker.register('sw.js',{updateViaCache:'none'}).catch(()=>{})});
+/* ---------- обновления «по воздуху» ---------- */
+let UPD=null,updBusy=false;
+const updSafe=()=>{const ci=document.getElementById('cin');return !REC&&!RP.down&&!CALL&&!ui.sheet&&!(ci&&ci.value.trim())};
+function updBanner(show){let b=document.getElementById('upd');if(!show){if(b)b.remove();return}
+  if(b)return;b=document.createElement('div');b.id='upd';b.className='upd';b.innerHTML='<span>Доступна новая версия GoodHi</span><button data-a="doupd">Обновить</button>';document.body.appendChild(b)}
+function updApply(){
+  const k=sessionStorage.ghRel;if(k&&k===UPD&&Date.now()-(+sessionStorage.ghRelT||0)<6e5)return; // не зацикливаемся, если сервер ещё отдаёт старую версию
+  sessionStorage.ghRel=UPD;sessionStorage.ghRelT=Date.now();
+  const go=()=>location.reload();
+  if('serviceWorker' in navigator)navigator.serviceWorker.getRegistration().then(r=>r?r.update():null).catch(()=>{}).finally(go);else go();
+}
+async function updCheck(manual){
+  if(updBusy||location.protocol==='file:')return;updBusy=true;
+  try{
+    const r=await fetch('index.html',{cache:'no-cache'});if(!r.ok)throw 0;
+    const m=(await r.text()).match(/const APP_VER='([^']+)'/);
+    if(m&&m[1]!==APP_VER){UPD=m[1];if(updSafe())updApply();else updBanner(true)}
+    else{UPD=null;updBanner(false);if(manual)toast('У вас последняя версия','GoodHi '+APP_VER)}
+  }catch{if(manual)toast('Не удалось проверить','Проверьте интернет и попробуйте ещё раз')}
+  finally{updBusy=false}
+}
+setTimeout(()=>updCheck(),4000);
+setInterval(()=>{if(document.visibilityState==='visible')updCheck()},5*60*1000);
+document.addEventListener('visibilitychange',()=>{if(document.visibilityState==='visible')updCheck()});
+window.addEventListener('online',()=>updCheck());
+setInterval(()=>{if(UPD&&updSafe()&&document.visibilityState==='hidden')updApply()},20000); // в фоне обновляемся сами
 document.addEventListener('click',e=>{
   const el=e.target.closest('[data-a]');if(!el)return;
   if(el.dataset.bg&&e.target!==el)return;
@@ -1387,6 +1417,8 @@ document.addEventListener('click',e=>{
   else if(a==='pushon'){pushOn(true).then(ok=>{toast(ok?'Уведомления включены':'Не удалось включить',ok?'Пришлите себе сообщение с другого аккаунта для проверки':'Проверьте разрешение в настройках браузера');draw()})}
   else if(a==='pushoff'){pushDrop().then(()=>{toast('Уведомления выключены','Включить снова можно в настройках');draw()})}
   else if(a==='pushtest')pushTest();
+  else if(a==='doupd')updApply();
+  else if(a==='chkupd')updCheck(true);
   else if(a==='install'){if(IP){IP.prompt();IP.userChoice.finally(()=>{IP=null;draw()})}}
   else if(a==='vplay')vPlay(+v);else if(a==='vspd')vSpeed();else if(a==='vnplay')vnOpen(+v);
   else if(a==='vshape'){cfg.vs=shapeOk(v);saveCfg();draw()}else if(a==='vmode'){cfg.vm=v==='vnote'?'vnote':'voice';saveCfg();draw()}
