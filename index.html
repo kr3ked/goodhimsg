@@ -352,6 +352,14 @@ body.noauth .fly{display:block}
 .vidc .vd{position:absolute;left:8px;bottom:8px;padding:2px 9px;border-radius:99px;background:rgba(0,0,0,.55);color:#fff;font-size:11px;font-weight:800}
 .vplay{position:fixed;inset:0;z-index:120;display:grid;place-items:center;background:rgba(0,0,0,.9);animation:fadein .2s both}.vplay video{max-width:96vw;max-height:84vh;border-radius:12px;background:#000}
 .vplay .vx{position:absolute;top:calc(env(safe-area-inset-top,0px) + 12px);right:12px}
+.tabwrap{position:relative}
+.folds{display:flex;overflow-x:auto;flex:none;border-bottom:1px solid var(--line);scrollbar-width:none}.folds button{flex:1;padding:9px 14px;font-size:13px;font-weight:800;color:var(--mut);border-bottom:3px solid transparent;white-space:nowrap}.folds button.on{color:var(--ind);border-bottom-color:var(--ind)}
+.list.tg{padding:0 0 84px}.list.tg .row{border-radius:0;padding:8px 14px;position:relative}.list.tg .row::after{content:'';position:absolute;left:78px;right:0;bottom:0;border-bottom:1px solid var(--line)}
+.fab{position:absolute;right:16px;bottom:16px;width:56px;height:56px;border-radius:50%;display:grid;place-items:center;color:#fff;background:linear-gradient(135deg,var(--g1),var(--g2));box-shadow:0 6px 20px rgba(0,0,0,.35);z-index:3}
+.msgs{gap:3px;padding:10px;background-image:radial-gradient(rgba(148,163,184,.16) 1.2px,transparent 1.3px);background-size:22px 22px}
+.msgs .m{max-width:84%;padding:7px 11px;box-shadow:0 1px 2px rgba(0,0,0,.14)}.msgs .m.vn,.msgs .m.st{box-shadow:none}.msgs .m.in+.m.out,.msgs .m.out+.m.in{margin-top:7px}
+.msgs .m.tx>i{float:right;margin:7px -3px -3px 10px}.msgs .m.tx::after{content:'';display:block;clear:both}
+.day{align-self:center;flex:none;margin:8px 0;padding:3px 12px;border-radius:99px;font-size:12px;font-weight:800;color:var(--mut);background:var(--card);border:1px solid var(--line)}
 </style>
 </head>
 <body>
@@ -762,10 +770,11 @@ function wipeChat(id,mode){
 }
 function chatSheet(c){
   const btn=(v,i,l)=>`<button class="sb" data-x="chat" data-v="${v}">${ic(i,18)}${l}</button>`,o=other(c);
-  return btn('clear','trash','Очистить историю у меня')+(isGrp(c)?(gMy(c)==='o'?btn('gdel','trash','Удалить для всех участников'):btn('gleave','x','Покинуть')):btn('drop','x','Удалить чат у меня')+(o&&rel(o.id)==='friend'?btn('both','trash','Очистить у обоих')+btn('bothdrop','trash','Удалить чат у обоих'):''));
+  return btn('pin','bookmark',pinned(c)?'Открепить':'Закрепить')+btn('clear','trash','Очистить историю у меня')+(isGrp(c)?(gMy(c)==='o'?btn('gdel','trash','Удалить для всех участников'):btn('gleave','x','Покинуть')):btn('drop','x','Удалить чат у меня')+(o&&rel(o.id)==='friend'?btn('both','trash','Очистить у обоих')+btn('bothdrop','trash','Удалить чат у обоих'):''));
 }
 function chatAct(v){
   const id=ui.cm,c=D.c.find(c=>c.id===id);if(!c)return;
+  if(v==='pin'){const k=meId()+'|'+id;if(PIN[k])delete PIN[k];else PIN[k]=1;lsSet('gh7pin',PIN);ui.sheet=null;return draw()}
   const ask={clear:'Очистить историю на этом устройстве?',drop:'Удалить чат на этом устройстве?',both:'Очистить переписку у вас и у собеседника? Это нельзя отменить.',bothdrop:'Удалить чат у вас и у собеседника? Это нельзя отменить.',gleave:'Покинуть? Вернуться можно только по приглашению.',gdel:'Удалить для всех участников? Это нельзя отменить.'}[v];
   if(!ask||!confirm(ask))return;ui.sheet=null;
   if(v==='gleave'||v==='gdel'){draw();(v==='gdel'?gDelete:gLeave)(id).then(ok=>{if(ok){if(ui.chat===id)ui.chat=null;draw()}else toast('Не получилось',v==='gdel'?'Проверьте соединение':'Проверьте соединение. Владелец не может выйти')})}
@@ -1163,7 +1172,7 @@ const thumbOf=f=>new Promise(r=>{const u=URL.createObjectURL(f),im=new Image();i
 
 /* ---------- state ---------- */
 let A={fx:true,step:'email',email:'',code:'',err:'',left:0,p:{first:'',last:'',un:'',g:0,photo:null}};
-let ui={tab:'chats',chat:null,sheet:null,q:'',fq:'',pd:null,perr:'',tray:false,att:false,uid:null,fid:null,sid:null,sd:null,fx:{}};
+let ui={tab:'feed',chat:null,sheet:null,q:'',fq:'',pd:null,perr:'',tray:false,att:false,uid:null,fid:null,sid:null,sd:null,fx:{}};
 let seen={},seenReq=new Set(),seenS={},inited=false,lastRaw='',lastCount=0;
 
 /* ---------- helpers on data ---------- */
@@ -1193,7 +1202,7 @@ function draw(){
   const ms=$('#msgs');
   if(ms){const n=cmsgs(ui.chat).length;ms.scrollTop=(lastChatDrawn!==ui.chat||n!==lastCount||atB)?ms.scrollHeight:mst;lastCount=n;lastChatDrawn=ui.chat;cmsgs(ui.chat).forEach(m=>shown.add(m.id))}else lastChatDrawn=null;
   const l2=$('.list');if(l2&&ls&&drawnTab===ui.tab){l2.scrollTop=lst;const r=rcur&&l2.querySelector('.reel[data-post="'+rcur+'"]');if(r)l2.scrollTop=r.offsetTop-roff}drawnTab=ui.tab;
-  const ti=['chats','feed','settings'].indexOf(ui.tab),ind=$('.nav .ind');
+  const ti=['feed','chats','settings'].indexOf(ui.tab),ind=$('.nav .ind');
   if(ind&&navPrev!==null&&navPrev!==ti)requestAnimationFrame(()=>requestAnimationFrame(()=>ind.style.setProperty('--i',ti)));
   hydrate();
   if(SV)svUpdate();
@@ -1207,14 +1216,21 @@ function authView(){
   if(A.step==='profile')body=`<h1 style="font-size:24px">Расскажите о себе</h1><p class="sub">Так вас увидят в GoodHi.</p><div class="stack" style="display:flex;flex-direction:column;gap:12px;align-items:stretch"><div style="align-self:center">${av({...p,first:p.first||'?'},90)}</div><div class="colors">${GR.map((g,i)=>`<button data-a="col" data-v="${i}" class="${p.g===i?'on':''}" style="background:linear-gradient(135deg,${g})" aria-label="Цвет"></button>`).join('')}</div><input class="inp" id="rf" data-p="first" maxlength="30" placeholder="Имя" value="${esc(p.first)}"><input class="inp" id="rl" data-p="last" maxlength="30" placeholder="Фамилия" value="${esc(p.last)}"><input class="inp" id="ru" data-p="un" maxlength="20" placeholder="@юзернейм (для поиска друзьями)" value="${esc(p.un)}"></div><button class="pb" style="margin-top:16px" data-a="reg">Начать общение</button>`;
   return `<div class="aurora"><div class="glass ${pp}">${body}${A.err?`<p class="err">${esc(A.err)}</p>`:''}<p class="hint" style="text-align:center;margin-top:16px">Данные хранятся только в этом браузере.</p></div></div>`;
 }
+let FOLD='all';
+const PIN=LSK('gh7pin','{}'),pinned=c=>!!PIN[meId()+'|'+c.id];
+const FOLDS=[['all','Все'],['dm','Личные'],['group','Группы'],['channel','Каналы']];
+const inFold=c=>FOLD==='all'||(FOLD==='dm'?!isGrp(c):c.type===FOLD);
+const lwhen=ts=>{const d=new Date(ts),n=new Date();return d.toDateString()===n.toDateString()?hhmm(ts):n-d<5184e5?d.toLocaleDateString('ru-RU',{weekday:'short'}):d.toLocaleDateString('ru-RU',{day:'2-digit',month:'2-digit',year:'2-digit'})};
+const dayLabel=ts=>{const d=new Date(ts),n=new Date(),y=new Date(Date.now()-864e5);return d.toDateString()===n.toDateString()?'Сегодня':d.toDateString()===y.toDateString()?'Вчера':d.toLocaleDateString('ru-RU',{day:'numeric',month:'long',...(d.getFullYear()!==n.getFullYear()?{year:'numeric'}:{})})};
+document.addEventListener('click',e=>{const b=e.target.closest&&e.target.closest('[data-x="fold"]');if(b){FOLD=b.dataset.v;draw()}});
 function chatRow(c){
   if(isGrp(c)){const ms=cmsgs(c.id),l=ms[ms.length-1],un=ms.filter(m=>m.from!==meId()&&m.st!=='read').length;
     const sn=l&&c.type==='group'?(l.from===meId()?'Вы: ':(usr(l.from)?esc(usr(l.from).first)+': ':'')):'';
-    return `<button class="row ${ui.chat===c.id?'on':''}" data-a="open" data-v="${c.id}">${gav(c,52)}<div class="grow"><div style="display:flex;justify-content:space-between;gap:8px"><span class="nm">${esc(c.name)}</span><span class="sb2">${l?hhmm(l.ts):''}</span></div><div style="display:flex;gap:8px"><span class="grow" style="display:flex;align-items:center;gap:5px;min-width:0"><span class="sb2" style="min-width:0">${l?sn+esc(l.t):esc(c.desc||(c.type==='channel'?'Канал':'Группа'))}</span></span>${un?`<span class="badge">${un}</span>`:''}</div></div></button>`}
+    return `<button class="row ${ui.chat===c.id?'on':''}" data-a="open" data-v="${c.id}">${gav(c,52)}<div class="grow"><div style="display:flex;justify-content:space-between;gap:8px"><span class="nm">${esc(c.name)}</span><span class="sb2">${pinned(c)?'📌 ':''}${l?lwhen(l.ts):''}</span></div><div style="display:flex;gap:8px"><span class="grow" style="display:flex;align-items:center;gap:5px;min-width:0"><span class="sb2" style="min-width:0">${l?sn+esc(l.t):esc(c.desc||(c.type==='channel'?'Канал':'Группа'))}</span></span>${un?`<span class="badge">${un}</span>`:''}</div></div></button>`}
   const o=other(c),ms=cmsgs(c.id),l=ms[ms.length-1];
   const un=ms.filter(m=>m.from!==meId()&&m.st!=='read').length;
   const name=o?full(o):'Избранное';
-  return `<button class="row ${ui.chat===c.id?'on':''}" data-a="open" data-v="${c.id}">${o?av(o,52):`<div class="av" style="width:52px;height:52px;background:linear-gradient(135deg,${GR[4]});font-size:22px">${ic('bookmark',22)}</div>`}<div class="grow"><div style="display:flex;justify-content:space-between;gap:8px"><span class="nm">${o?N(o):'Избранное'}</span><span class="sb2">${l?hhmm(l.ts):''}</span></div><div style="display:flex;gap:8px"><span class="grow" style="display:flex;align-items:center;gap:5px;min-width:0">${l&&l.from===meId()&&l.k!=='call'?TK(l.st,15):''}<span class="sb2" style="min-width:0">${l?esc(l.t):'Нет сообщений'}</span></span>${un?`<span class="badge">${un}</span>`:''}</div></div></button>`;
+  return `<button class="row ${ui.chat===c.id?'on':''}" data-a="open" data-v="${c.id}">${o?av(o,52):`<div class="av" style="width:52px;height:52px;background:linear-gradient(135deg,${GR[4]});font-size:22px">${ic('bookmark',22)}</div>`}<div class="grow"><div style="display:flex;justify-content:space-between;gap:8px"><span class="nm">${o?N(o):'Избранное'}</span><span class="sb2">${pinned(c)?'📌 ':''}${l?lwhen(l.ts):''}</span></div><div style="display:flex;gap:8px"><span class="grow" style="display:flex;align-items:center;gap:5px;min-width:0">${l&&l.from===meId()&&l.k!=='call'?TK(l.st,15):''}<span class="sb2" style="min-width:0">${l?esc(l.t):'Нет сообщений'}</span></span>${un?`<span class="badge">${un}</span>`:''}</div></div></button>`;
 }
 function contactsHtml(q){
   const inc=incoming(),fr=friends().filter(x=>!q||full(x.u).toLowerCase().includes(q)||x.u.un.includes(q));
@@ -1228,8 +1244,9 @@ function tabView(){
   if(ui.tab==='chats'){
     const cs=myChats().sort((a,b)=>(cmsgs(b.id).slice(-1)[0]?.ts||b.id)-(cmsgs(a.id).slice(-1)[0]?.ts||a.id)).filter(c=>{const o=other(c);return !q||(isGrp(c)?c.name:o?full(o):'избранное').toLowerCase().includes(q)});
     const bare=!myChats().length&&!friends().length&&!incoming().length;
-    const body=bare?`<div class="empty"><div><b>Здесь пока тихо</b>Найдите друга по @юзернейму и напишите ему.<div style="margin-top:18px;display:flex;flex-direction:column;gap:10px"><button class="pb" data-a="sheet" data-v="find">Найти друга</button><button class="sb" data-a="saved">Открыть «Избранное»</button></div></div></div>`:cs.map(chatRow).join('')+contactsHtml(q);
-    return `<div class="top"><h1>Чаты</h1><button class="ib" data-a="sheet" data-v="new" aria-label="Новый чат">${ic('squarePen')}</button></div>${strip()}<div style="padding:0 14px 8px"><input class="inp" id="sq" data-k="q" placeholder="Поиск по чатам и контактам" value="${esc(ui.q)}" style="padding:10px 16px"></div><div class="list">${body}</div>`;
+    const shownCs=cs.filter(inFold).sort((a,b)=>pinned(b)-pinned(a));
+    const body=bare?`<div class="empty"><div><b>Здесь пока тихо</b>Найдите друга по @юзернейму и напишите ему.<div style="margin-top:18px;display:flex;flex-direction:column;gap:10px"><button class="pb" data-a="sheet" data-v="find">Найти друга</button><button class="sb" data-a="saved">Открыть «Избранное»</button></div></div></div>`:(shownCs.map(chatRow).join('')||(FOLD==='all'?'':'<p class="hint" style="padding:24px;text-align:center">В этой папке пока пусто.</p>'))+(FOLD==='all'||FOLD==='dm'?contactsHtml(q):'');
+    return `<div class="top"><h1>Чаты</h1></div>${strip()}<div style="padding:0 14px 8px"><input class="inp" id="sq" data-k="q" placeholder="Поиск по чатам и контактам" value="${esc(ui.q)}" style="padding:10px 16px"></div><div class="folds">${FOLDS.map(([k,n])=>`<button class="${FOLD===k?'on':''}" data-x="fold" data-v="${k}">${n}</button>`).join('')}</div><div class="list tg">${body}</div><button class="fab" data-a="sheet" data-v="new" aria-label="Новый чат">${ic('squarePen',22)}</button>`;
   }
   const u=me();
   const seg=(k,o)=>`<div class="seg" style="grid-template-columns:repeat(${o.length},1fr)">${o.map(([v,l,i])=>`<button class="${cfg[k]===v?'on':''}" data-a="cfg" data-k="${k}" data-v="${v}">${i?ic(i,15):''}${l}</button>`).join('')}</div>`;
@@ -1258,7 +1275,7 @@ function chatView(){
     if(m.k==='st'){const st=D.stk[m.sid];return `<div class="m ${mine?'out':'in'} st${f}">${st?`<img src="${st.img}" alt="Стикер">`:'<span class="sb2">Стикер удалён</span>'}${tm}</div>`}
     return `<div class="m ${mine?'out':'in'}${f}">${gn}${esc(m.t)}${tm}</div>`;
   };
-  const wrap=m=>bub(m).replace(/^<div class="(m [^"]*)">/,(_,c)=>`<div data-mid="${m.id}" class="${c}">${msgHead(m)}`);
+  const wrap=(m,i,l)=>(!i||new Date(l[i-1].ts).toDateString()!==new Date(m.ts).toDateString()?`<div class="day">${dayLabel(m.ts)}</div>`:'')+bub(m).replace(/^<div class="(m [^"]*)">/,(_,c)=>`<div data-mid="${m.id}" class="${c}${m.k?'':' tx'}">${msgHead(m)}`);
   const att=ui.att?`<div class="att ${FX.tray?'in':''}"><button data-a="pickph">${ic('image',20)}Фото и видео</button>${G?'':`<button data-a="pickfl">${ic('file',20)}Файл · до 100 МБ</button>`}</div>`:'';
   const my=Object.values(D.stk).filter(x=>x.owner===meId());
   const tray=ui.tray?`<div class="tray ${FX.tray?'in':''}">${u.plus?`<div class="tgrid">${my.map(x=>`<div class="stk"><button data-a="sendstk" data-v="${x.id}" aria-label="Отправить стикер"><img src="${x.img}" alt=""></button><span class="x" data-a="delstk" data-v="${x.id}" role="button" aria-label="Удалить">${ic('x',12)}</span></div>`).join('')}<button class="stk add" data-a="addstk" aria-label="Создать стикер">${ic('plus',26)}</button></div><input id="sf" type="file" accept="image/*" hidden>${my.length?'':'<p class="hint" style="text-align:center;margin-top:8px">Создайте первый стикер из любой картинки.</p>'}`:`<div class="lock">${ic('lock',24)}<b>Свои стикеры: в Good Plus</b><span class="hint">Создавайте стикеры из своих картинок и отправляйте друзьям.</span><button class="pb pl" style="max-width:260px" data-a="sheet" data-v="shop">${ic('sparkles',18)}Открыть магазин</button></div>`}</div>`:'';
@@ -1344,8 +1361,8 @@ function sheetView(){
 }
 function mainView(){
   FX=ui.fx||{};ui.fx={};
-  const inc=incoming().length;
-  const T=[['chats','Чаты','messageCircle'],['feed','Лента','compass'],['settings','Настройки','settings']];
+  const inc=incoming().length+myChats().filter(c=>cmsgs(c.id).some(m=>m.from!==meId()&&m.st!=='read')).length;
+  const T=[['feed','Лента','compass'],['chats','Чаты','messageCircle'],['settings','Настройки','settings']];
   const ti=T.findIndex(x=>x[0]===ui.tab),pi=navPrev===null?ti:navPrev;
   return `<div class="main ${ui.chat?'open':''}"><aside class="${FX.pane==='list'?'list-in':''}"><div class="tabwrap${FX.tab?' stag tab-'+FX.tab:''}${FX.pane==='list'?' stag':''}">${tabView()}</div><nav class="nav" style="--n:${T.length}"><span class="ind" style="--i:${pi}"></span>${T.map(([k,l,i])=>`<button class="${ui.tab===k?'on':''}${FX.tab&&ui.tab===k?' bump':''}" data-a="tab" data-v="${k}"><span>${ic(i,24)}</span>${l}${k==='chats'&&inc?`<i class="badge">${inc}</i>`:''}</button>`).join('')}</nav></aside><section class="pane ${FX.pane==='open'?'open-in':''}">${chatView()}</section></div>${sheetView()}`;
 }
@@ -1399,7 +1416,7 @@ function doRegister(p,un){D=load();
   const u={id:D.n++,email:A.email,un,first:p.first.trim(),last:p.last.trim(),bio:'',g:p.g,photo:p.photo,ts:Date.now()};
   D.u.push(u);delete D.codes[A.email];save();login(u.id);
 }
-function login(id){sessionStorage.gh7s=id;try{localStorage.gh7ps=JSON.stringify({uid:id,t:Date.now()})}catch{}setTimeout(()=>devPoll(true),50);A={fx:true,step:'email',email:'',code:'',err:'',left:0,p:{first:'',last:'',un:'',g:0,photo:null}};ui={tab:'chats',chat:null,sheet:null,q:'',fq:'',pd:null,perr:'',tray:false,att:false,uid:null,fid:null,sid:null,sd:null,fx:{}};inited=false;draw();tick()}
+function login(id){sessionStorage.gh7s=id;try{localStorage.gh7ps=JSON.stringify({uid:id,t:Date.now()})}catch{}setTimeout(()=>devPoll(true),50);A={fx:true,step:'email',email:'',code:'',err:'',left:0,p:{first:'',last:'',un:'',g:0,photo:null}};ui={tab:'feed',chat:null,sheet:null,q:'',fq:'',pd:null,perr:'',tray:false,att:false,uid:null,fid:null,sid:null,sd:null,fx:{}};inited=false;draw();tick()}
 function openDm(uid){
   mut(()=>{let c=D.c.find(c=>c.type==='dm'&&c.m.includes(meId())&&c.m.includes(uid));
     if(!c){if(rel(uid)!=='friend')return;c={id:D.n++,type:'dm',m:[meId(),uid]};D.c.push(c)}
@@ -1542,7 +1559,7 @@ let IP=null;
 const isApp=()=>{try{return matchMedia('(display-mode: standalone)').matches||navigator.standalone===true}catch{return false}};
 window.addEventListener('beforeinstallprompt',e=>{e.preventDefault();IP=e;if(meId()&&!ui.chat&&ui.tab!=='chats'&&ui.tab!=='feed')draw()});
 window.addEventListener('appinstalled',()=>{IP=null;toast('GoodHi установлен','Откройте его с главного экрана')});
-const APP_VER='2026-11-26.6';
+const APP_VER='2026-11-26.7';
 if('serviceWorker' in navigator&&location.protocol!=='file:')window.addEventListener('load',()=>{navigator.serviceWorker.register('sw.js',{updateViaCache:'none'}).catch(()=>{})});
 /* ---------- обновления «по воздуху» ---------- */
 let UPD=null,updBusy=false;
@@ -1579,7 +1596,7 @@ document.addEventListener('click',e=>{
   else if(a==='aback'){A.step='email';A.err='';A.fx=true;$('#toast').innerHTML='';draw()}
   else if(a==='col'){A.p.g=+v;A.p.photo=null;draw()}
   else if(a==='reg')register();
-  else if(a==='tab'){const T=['chats','feed','settings'],o=T.indexOf(ui.tab),n=T.indexOf(v);if(o===n)return;ui.fx={tab:n>o?'r':'l'};ui.tab=v;ui.q='';draw()}
+  else if(a==='tab'){const T=['feed','chats','settings'],o=T.indexOf(ui.tab),n=T.indexOf(v);if(o===n)return;ui.fx={tab:n>o?'r':'l'};ui.tab=v;ui.q='';draw()}
   else if(a==='open'){ui.chat=+v;ui.fx={pane:'open'};draw()}
   else if(a==='back')closeChat();
   else if(a==='sheet'){ui.sheet=v;ui.fq='';ui.perr='';if(v==='gjoin')ui.gd={code:'',err:'',busy:false};ui.fx={sheet:1};if(v==='profile'){const u=me();ui.pd={first:u.first,last:u.last,un:u.un,bio:u.bio||'',email:u.email,g:u.g,photo:u.photo,nick:u.nick||'',banner:u.banner||null}}draw()}
